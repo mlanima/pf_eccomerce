@@ -1,0 +1,48 @@
+spring:
+  application:
+    name: horse-riding-ecommerce
+
+  datasource:
+    url: jdbc:mysql://${DB_HOST:localhost}:${DB_PORT:3306}/${DB_NAME:horse_riding_ecommerce}?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true
+    username: ${DB_USERNAME:ecommerce_user}
+    password: ${DB_PASSWORD:password}
+    driver-class-name: com.mysql.cj.jdbc.Driver
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: false
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.MySQLDialect
+        format_sql: true
+
+server:
+  port: 8080
+  servlet:
+    context-path: /api
+
+# JWT Configuration
+jwt:
+  secret: ${JWT_SECRET:default-secret-key-change-in-production}
+  expiration: ${JWT_EXPIRATION:86400000}
+
+# PayPal Configuration
+paypal:
+  client-id: ${PAYPAL_CLIENT_ID:}
+  client-secret: ${PAYPAL_CLIENT_SECRET:}
+  mode: ${PAYPAL_MODE:sandbox}
+
+# File Upload Configuration
+file:
+  upload-dir: ${UPLOAD_DIR:./uploads}
+  max-size: ${MAX_FILE_SIZE:10MB}
+
+# CORS Configuration
+cors:
+  allowed-origins: ${FRONTEND_URL:http://localhost:3000}
+
+logging:
+  level:
+    com.horseriding.ecommerce: INFO
+    org.springframework.security: DEBUG

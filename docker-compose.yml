@@ -1,0 +1,83 @@
+version: "3.8"
+
+services:
+  # MySQL Database
+  mysql:
+    image: mysql:8.0
+    container_name: horse-riding-mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: ${DB_NAME:-horse_riding_ecommerce}
+      MYSQL_USER: ${DB_USERNAME:-ecommerce_user}
+      MYSQL_PASSWORD: ${DB_PASSWORD:-password}
+    ports:
+      - "3306:3306"
+    networks:
+      - horse-riding-network
+
+  # Spring Boot Backend
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: horse-riding-backend
+    environment:
+      - DB_HOST=mysql
+      - DB_PORT=3306
+      - DB_NAME=${DB_NAME:-horse_riding_ecommerce}
+      - DB_USERNAME=${DB_USERNAME:-ecommerce_user}
+      - DB_PASSWORD=${DB_PASSWORD:-password}
+      - JWT_SECRET=${JWT_SECRET:-default-secret-key-change-in-production}
+      - JWT_EXPIRATION=${JWT_EXPIRATION:-86400000}
+      - PAYPAL_CLIENT_ID=${PAYPAL_CLIENT_ID}
+      - PAYPAL_CLIENT_SECRET=${PAYPAL_CLIENT_SECRET}
+      - PAYPAL_MODE=${PAYPAL_MODE:-sandbox}
+      - SMTP_HOST=${SMTP_HOST:-smtp.gmail.com}
+      - SMTP_PORT=${SMTP_PORT:-587}
+      - SMTP_USERNAME=${SMTP_USERNAME}
+      - SMTP_PASSWORD=${SMTP_PASSWORD}
+      - UPLOAD_DIR=/app/uploads
+      - MAX_FILE_SIZE=${MAX_FILE_SIZE:-10MB}
+    ports:
+      - "8080:8080"
+    volumes:
+      - backend_uploads:/app/uploads
+    depends_on:
+      mysql:
+        condition: service_healthy
+    networks:
+      - horse-riding-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/api/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  # Next.js Frontend
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: horse-riding-frontend
+    environment:
+      - BACKEND_URL=http://backend:8080
+      - PAYPAL_CLIENT_ID=${PAYPAL_CLIENT_ID}
+      - NODE_ENV=production
+    ports:
+      - "3000:3000"
+    depends_on:
+      backend:
+        condition: service_healthy
+    networks:
+      - horse-riding-network
+
+volumes:
+  mysql_data:
+    driver: local
+  backend_uploads:
+    driver: local
+
+networks:
+  horse-riding-network:
+    driver: bridge
