@@ -96,7 +96,7 @@ public class OrderItem {
         if (product != null) {
             this.productName = product.getName();
             this.productSku = product.getSku();
-            this.productBrand = product.getBrand();
+            this.productBrand = product.getBrand() != null ? product.getBrand().getName() : null;
             this.productModel = product.getModel();
         }
     }
@@ -131,7 +131,7 @@ public class OrderItem {
         if (product != null) {
             this.productName = product.getName();
             this.productSku = product.getSku();
-            this.productBrand = product.getBrand();
+            this.productBrand = product.getBrand() != null ? product.getBrand().getName() : null;
             this.productModel = product.getModel();
         }
     }

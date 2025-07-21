@@ -94,7 +94,7 @@ public class CartItem {
     }
 
     public String getProductBrand() {
-        return product != null ? product.getBrand() : null;
+        return product != null && product.getBrand() != null ? product.getBrand().getName() : null;
     }
 
     public String getMainImageUrl() {

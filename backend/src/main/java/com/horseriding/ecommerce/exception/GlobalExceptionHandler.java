@@ -78,6 +78,23 @@ public class GlobalExceptionHandler {
     }
 
     /**
+     * Handle resource not found exceptions
+     */
+    @ExceptionHandler(ResourceNotFoundException.class)
+    public ResponseEntity<ApiErrorResponse> handleResourceNotFoundException(
+            ResourceNotFoundException ex, WebRequest request) {
+        
+        ApiErrorResponse errorResponse = responseMapper.toErrorResponse(
+                "Not Found",
+                ex.getMessage(),
+                HttpStatus.NOT_FOUND,
+                request.getDescription(false)
+        );
+        
+        return new ResponseEntity<>(errorResponse, HttpStatus.NOT_FOUND);
+    }
+
+    /**
      * Handle illegal argument exceptions
      */
     @ExceptionHandler(IllegalArgumentException.class)

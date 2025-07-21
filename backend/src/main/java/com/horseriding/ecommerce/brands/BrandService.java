@@ -8,7 +8,9 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Comparator;
 import java.util.List;
+import java.util.Optional;
 
 /**
  * Service class for Brand entity operations.
@@ -187,5 +189,47 @@ public class BrandService {
      */
     public long getActiveBrandCount() {
         return brandRepository.countByActiveTrue();
+    }
+    
+    /**
+     * Search brands by name with pagination.
+     * Used for brand search functionality.
+     */
+    public Page<Brand> searchBrands(String query, Pageable pageable) {
+        log.debug("Searching brands by query: {} with pagination: {}", query, pageable);
+        return brandRepository.findByNameContainingIgnoreCaseAndActiveTrue(query, pageable);
+    }
+    
+    /**
+     * Get brands ordered by product count.
+     * Used for popular brands display.
+     */
+    public List<Brand> getBrandsOrderedByProductCount() {
+        log.debug("Fetching brands ordered by product count");
+        List<Brand> brands = brandRepository.findByActiveTrue();
+        brands.sort(Comparator.comparing(Brand::getProductCount).reversed());
+        return brands;
+    }
+    
+    /**
+     * Deactivate a brand (soft delete).
+     * Used for admin brand management.
+     */
+    @Transactional
+    public void deactivateBrand(Long id) {
+        log.debug("Deactivating brand with ID: {}", id);
+        Brand brand = getBrandById(id);
+        brand.setActive(false);
+        brandRepository.save(brand);
+        log.info("Deactivated brand with ID: {}", id);
+    }
+    
+    /**
+     * Check if a brand name exists.
+     * Used for brand creation validation.
+     */
+    public boolean brandNameExists(String name) {
+        log.debug("Checking if brand name exists: {}", name);
+        return brandRepository.existsByNameIgnoreCase(name);
     }
 }
