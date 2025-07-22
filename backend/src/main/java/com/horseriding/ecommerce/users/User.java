@@ -16,10 +16,15 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import java.time.LocalDateTime;
+import java.util.Collection;
+import java.util.Collections;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.ToString;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.userdetails.UserDetails;
 
 /**
  * User entity representing customers and administrators in the system.
@@ -36,7 +41,7 @@ import lombok.ToString;
 @NoArgsConstructor
 @EqualsAndHashCode(onlyExplicitlyIncluded = true)
 @ToString(exclude = "password")
-public final class User {
+public final class User implements UserDetails {
 
     /** Minimum password length constant. */
     private static final int MIN_PASSWORD_LENGTH = 8;
@@ -171,5 +176,77 @@ public final class User {
      */
     public boolean hasAdminPrivileges() {
         return role == UserRole.ADMIN || role == UserRole.SUPERADMIN;
+    }
+
+    // UserDetails interface implementation
+
+    /**
+     * Returns the authorities granted to the user based on their role.
+     *
+     * @return collection of granted authorities
+     */
+    @Override
+    public Collection<? extends GrantedAuthority> getAuthorities() {
+        return Collections.singletonList(new SimpleGrantedAuthority("ROLE_" + role.name()));
+    }
+
+    /**
+     * Returns the password used to authenticate the user.
+     *
+     * @return the user's password
+     */
+    @Override
+    public String getPassword() {
+        return password;
+    }
+
+    /**
+     * Returns the username used to authenticate the user (email in our case).
+     *
+     * @return the user's email
+     */
+    @Override
+    public String getUsername() {
+        return email;
+    }
+
+    /**
+     * Indicates whether the user's account has expired.
+     *
+     * @return true if the user's account is valid (non-expired), false otherwise
+     */
+    @Override
+    public boolean isAccountNonExpired() {
+        return true; // We don't implement account expiration
+    }
+
+    /**
+     * Indicates whether the user is locked or unlocked.
+     *
+     * @return true if the user is not locked, false otherwise
+     */
+    @Override
+    public boolean isAccountNonLocked() {
+        return true; // We don't implement account locking
+    }
+
+    /**
+     * Indicates whether the user's credentials (password) has expired.
+     *
+     * @return true if the user's credentials are valid (non-expired), false otherwise
+     */
+    @Override
+    public boolean isCredentialsNonExpired() {
+        return true; // We don't implement credential expiration
+    }
+
+    /**
+     * Indicates whether the user is enabled or disabled.
+     *
+     * @return true if the user is enabled, false otherwise
+     */
+    @Override
+    public boolean isEnabled() {
+        return true; // We don't implement user disabling yet
     }
 }

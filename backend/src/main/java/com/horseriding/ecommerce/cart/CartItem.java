@@ -50,6 +50,9 @@ public class CartItem {
     @Min(value = 1, message = "Quantity must be at least 1")
     @Max(value = 999, message = "Quantity cannot exceed 999")
     private Integer quantity;
+    
+    @Transient
+    private String validationMessage;
 
     // Audit fields
     @Column(name = "created_at", nullable = false, updatable = false)

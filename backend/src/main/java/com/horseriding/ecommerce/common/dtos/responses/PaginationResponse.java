@@ -33,4 +33,15 @@ public class PaginationResponse<T> {
         this.last = page >= totalPages - 1;
         this.empty = content == null || content.isEmpty();
     }
+    
+    public PaginationResponse(List<T> content, int page, int size, long totalElements, int totalPages, boolean first, boolean last) {
+        this.content = content;
+        this.page = page;
+        this.size = size;
+        this.totalElements = totalElements;
+        this.totalPages = totalPages;
+        this.first = first;
+        this.last = last;
+        this.empty = content == null || content.isEmpty();
+    }
 }

@@ -6,8 +6,8 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 /**
- * DTO for product search results with pagination.
- * Optimized for search result displays.
+ * DTO for product search results.
+ * Contains minimal information needed for search results display.
  */
 @Data
 @NoArgsConstructor
@@ -22,10 +22,7 @@ public class ProductSearchResponse {
     private Long categoryId;
     private String categoryName;
     private String mainImageUrl;
-    private boolean active;
-    private boolean featured;
     private String brand;
-    private String model;
     private String sku;
 
     /**
