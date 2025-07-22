@@ -8,7 +8,7 @@ on:
 
 jobs:
   backend:
-    name: Backend - Build & Lint
+    name: Backend - Lint & Build
     runs-on: ubuntu-latest
 
     defaults:
@@ -25,14 +25,14 @@ jobs:
           java-version: "21"
           distribution: "temurin"
 
-      - name: Lint with Checkstyle (optional)
-        run: ./mvnw spotless:check
+      - name: Lint with Spotless
+        run: mvn spotless:check
 
       - name: Build with Maven
-        run: ./mvnw clean install -DskipTests=true
+        run: mvn clean install -DskipTests=true
 
   frontend:
-    name: Frontend - Lint & Build
+    name: Frontend - Build & Lint
     runs-on: ubuntu-latest
 
     defaults:
