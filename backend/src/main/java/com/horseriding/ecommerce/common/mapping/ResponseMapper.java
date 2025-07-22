@@ -3,15 +3,13 @@ package com.horseriding.ecommerce.common.mapping;
 import com.horseriding.ecommerce.common.dtos.responses.ApiErrorResponse;
 import com.horseriding.ecommerce.common.dtos.responses.SuccessResponse;
 import com.horseriding.ecommerce.common.dtos.responses.ValidationErrorResponse;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
 import org.springframework.validation.BindingResult;
 import org.springframework.validation.FieldError;
-
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
 
 /**
  * Utility class for creating standardized API response DTOs.
@@ -36,23 +34,26 @@ public class ResponseMapper {
     /**
      * Create an error response
      */
-    public ApiErrorResponse toErrorResponse(String error, String message, HttpStatus status, String path) {
+    public ApiErrorResponse toErrorResponse(
+            String error, String message, HttpStatus status, String path) {
         return new ApiErrorResponse(error, message, status.value(), path);
     }
 
     /**
      * Create an error response with details
      */
-    public ApiErrorResponse toErrorResponse(String error, String message, HttpStatus status, String path, List<String> details) {
+    public ApiErrorResponse toErrorResponse(
+            String error, String message, HttpStatus status, String path, List<String> details) {
         return new ApiErrorResponse(error, message, status.value(), path, details);
     }
 
     /**
      * Create a validation error response from BindingResult
      */
-    public ValidationErrorResponse toValidationErrorResponse(BindingResult bindingResult, String path) {
+    public ValidationErrorResponse toValidationErrorResponse(
+            BindingResult bindingResult, String path) {
         Map<String, String> fieldErrors = new HashMap<>();
-        
+
         for (FieldError fieldError : bindingResult.getFieldErrors()) {
             fieldErrors.put(fieldError.getField(), fieldError.getDefaultMessage());
         }
@@ -62,33 +63,28 @@ public class ResponseMapper {
                 "Request validation failed",
                 HttpStatus.BAD_REQUEST.value(),
                 path,
-                fieldErrors
-        );
+                fieldErrors);
     }
 
     /**
      * Create a validation error response from field errors map
      */
-    public ValidationErrorResponse toValidationErrorResponse(Map<String, String> fieldErrors, String path) {
+    public ValidationErrorResponse toValidationErrorResponse(
+            Map<String, String> fieldErrors, String path) {
         return new ValidationErrorResponse(
                 "Validation Failed",
                 "Request validation failed",
                 HttpStatus.BAD_REQUEST.value(),
                 path,
-                fieldErrors
-        );
+                fieldErrors);
     }
 
     /**
      * Create a validation error response from constraint violations
      */
-    public ValidationErrorResponse toValidationErrorResponse(String message, Map<String, String> fieldErrors, String path) {
+    public ValidationErrorResponse toValidationErrorResponse(
+            String message, Map<String, String> fieldErrors, String path) {
         return new ValidationErrorResponse(
-                "Validation Failed",
-                message,
-                HttpStatus.BAD_REQUEST.value(),
-                path,
-                fieldErrors
-        );
+                "Validation Failed", message, HttpStatus.BAD_REQUEST.value(), path, fieldErrors);
     }
 }

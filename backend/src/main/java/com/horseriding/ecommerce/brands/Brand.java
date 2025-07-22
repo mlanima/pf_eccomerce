@@ -4,23 +4,22 @@ import com.horseriding.ecommerce.products.Product;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
+import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.ToString;
-
-import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
 
 /**
  * Brand entity representing equipment manufacturers and brands.
  * Contains brand information and relationships to products.
  */
 @Entity
-@Table(name = "brands", indexes = {
-    @Index(name = "idx_brand_name", columnList = "name")
-})
+@Table(
+        name = "brands",
+        indexes = {@Index(name = "idx_brand_name", columnList = "name")})
 @Data
 @NoArgsConstructor
 @EqualsAndHashCode(onlyExplicitlyIncluded = true)

@@ -3,24 +3,28 @@ package com.horseriding.ecommerce.cart;
 import com.horseriding.ecommerce.products.Product;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.*;
+import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.ToString;
-
-import java.math.BigDecimal;
-import java.time.LocalDateTime;
 
 /**
  * CartItem entity representing individual items within a shopping cart.
  * Contains product information, quantity, and calculated pricing.
  */
 @Entity
-@Table(name = "cart_items", indexes = {
-    @Index(name = "idx_cart_item_cart", columnList = "cart_id"),
-    @Index(name = "idx_cart_item_product", columnList = "product_id"),
-    @Index(name = "idx_cart_item_cart_product", columnList = "cart_id, product_id", unique = true)
-})
+@Table(
+        name = "cart_items",
+        indexes = {
+            @Index(name = "idx_cart_item_cart", columnList = "cart_id"),
+            @Index(name = "idx_cart_item_product", columnList = "product_id"),
+            @Index(
+                    name = "idx_cart_item_cart_product",
+                    columnList = "cart_id, product_id",
+                    unique = true)
+        })
 @Data
 @NoArgsConstructor
 @EqualsAndHashCode(onlyExplicitlyIncluded = true)
@@ -106,8 +110,10 @@ public class CartItem {
     }
 
     public boolean isQuantityAvailable() {
-        return product != null && product.getStockQuantity() != null && 
-               quantity != null && product.getStockQuantity() >= quantity;
+        return product != null
+                && product.getStockQuantity() != null
+                && quantity != null
+                && product.getStockQuantity() >= quantity;
     }
 
     public boolean isProductActive() {
@@ -126,8 +132,11 @@ public class CartItem {
             return "Product is out of stock";
         }
         if (!isQuantityAvailable()) {
-            return "Requested quantity (" + quantity + ") exceeds available stock (" + 
-                   product.getStockQuantity() + ")";
+            return "Requested quantity ("
+                    + quantity
+                    + ") exceeds available stock ("
+                    + product.getStockQuantity()
+                    + ")";
         }
         return null;
     }

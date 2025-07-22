@@ -4,10 +4,9 @@ import com.horseriding.ecommerce.brands.Brand;
 import com.horseriding.ecommerce.brands.dto.BrandResponse;
 import com.horseriding.ecommerce.brands.dto.CreateBrandRequest;
 import com.horseriding.ecommerce.brands.dto.UpdateBrandRequest;
-import org.springframework.stereotype.Component;
-
 import java.util.List;
 import java.util.stream.Collectors;
+import org.springframework.stereotype.Component;
 
 /**
  * Mapper class for converting between Brand entities and DTOs.
@@ -25,7 +24,7 @@ public class BrandMapper {
         if (brand == null) {
             return null;
         }
-        
+
         return BrandResponse.builder()
                 .id(brand.getId())
                 .name(brand.getName())
@@ -49,10 +48,8 @@ public class BrandMapper {
         if (brands == null) {
             return List.of();
         }
-        
-        return brands.stream()
-                .map(this::toResponse)
-                .collect(Collectors.toList());
+
+        return brands.stream().map(this::toResponse).collect(Collectors.toList());
     }
 
     /**
@@ -65,14 +62,14 @@ public class BrandMapper {
         if (request == null) {
             return null;
         }
-        
+
         Brand brand = new Brand();
         brand.setName(request.getName());
         brand.setDescription(request.getDescription());
         brand.setLogoUrl(request.getLogoUrl());
         brand.setWebsiteUrl(request.getWebsiteUrl());
         brand.setCountryOfOrigin(request.getCountryOfOrigin());
-        
+
         return brand;
     }
 
@@ -87,13 +84,13 @@ public class BrandMapper {
         if (brand == null || request == null) {
             return brand;
         }
-        
+
         brand.setName(request.getName());
         brand.setDescription(request.getDescription());
         brand.setLogoUrl(request.getLogoUrl());
         brand.setWebsiteUrl(request.getWebsiteUrl());
         brand.setCountryOfOrigin(request.getCountryOfOrigin());
-        
+
         return brand;
     }
 }

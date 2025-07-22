@@ -1,10 +1,9 @@
 package com.horseriding.ecommerce.common.dtos.responses;
 
+import java.time.LocalDateTime;
+import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import lombok.AllArgsConstructor;
-
-import java.time.LocalDateTime;
 
 /**
  * DTO for successful operation confirmations.

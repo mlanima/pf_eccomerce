@@ -1,13 +1,12 @@
 package com.horseriding.ecommerce.products.dtos.responses;
 
-import lombok.Data;
-import lombok.NoArgsConstructor;
-import lombok.AllArgsConstructor;
-
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
 /**
  * DTO for detailed product information responses.
@@ -46,8 +45,10 @@ public class ProductDetailResponse {
     }
 
     public boolean isLowStock() {
-        return stockQuantity != null && lowStockThreshold != null && 
-               stockQuantity <= lowStockThreshold && stockQuantity > 0;
+        return stockQuantity != null
+                && lowStockThreshold != null
+                && stockQuantity <= lowStockThreshold
+                && stockQuantity > 0;
     }
 
     public boolean isOutOfStock() {

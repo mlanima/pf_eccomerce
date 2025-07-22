@@ -3,23 +3,24 @@ package com.horseriding.ecommerce.orders;
 import com.horseriding.ecommerce.products.Product;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.*;
+import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.ToString;
-
-import java.math.BigDecimal;
-import java.time.LocalDateTime;
 
 /**
  * OrderItem entity representing individual items within an order.
  * Contains product information, quantity, and pricing at the time of order.
  */
 @Entity
-@Table(name = "order_items", indexes = {
-    @Index(name = "idx_order_item_order", columnList = "order_id"),
-    @Index(name = "idx_order_item_product", columnList = "product_id")
-})
+@Table(
+        name = "order_items",
+        indexes = {
+            @Index(name = "idx_order_item_order", columnList = "order_id"),
+            @Index(name = "idx_order_item_product", columnList = "product_id")
+        })
 @Data
 @NoArgsConstructor
 @EqualsAndHashCode(onlyExplicitlyIncluded = true)
@@ -50,13 +51,19 @@ public class OrderItem {
     @Column(name = "unit_price", nullable = false, precision = 10, scale = 2)
     @NotNull(message = "Unit price is required")
     @DecimalMin(value = "0.01", message = "Unit price must be greater than 0")
-    @Digits(integer = 8, fraction = 2, message = "Unit price must have at most 8 integer digits and 2 decimal places")
+    @Digits(
+            integer = 8,
+            fraction = 2,
+            message = "Unit price must have at most 8 integer digits and 2 decimal places")
     private BigDecimal unitPrice;
 
     @Column(name = "total_price", nullable = false, precision = 10, scale = 2)
     @NotNull(message = "Total price is required")
     @DecimalMin(value = "0.01", message = "Total price must be greater than 0")
-    @Digits(integer = 8, fraction = 2, message = "Total price must have at most 8 integer digits and 2 decimal places")
+    @Digits(
+            integer = 8,
+            fraction = 2,
+            message = "Total price must have at most 8 integer digits and 2 decimal places")
     private BigDecimal totalPrice;
 
     // Product information at the time of order (for historical reference)
@@ -91,7 +98,7 @@ public class OrderItem {
         this.quantity = quantity;
         this.unitPrice = unitPrice;
         this.totalPrice = unitPrice.multiply(BigDecimal.valueOf(quantity));
-        
+
         // Copy product information for historical reference
         if (product != null) {
             this.productName = product.getName();
@@ -106,7 +113,7 @@ public class OrderItem {
     protected void onCreate() {
         this.createdAt = LocalDateTime.now();
         this.updatedAt = LocalDateTime.now();
-        
+
         // Calculate total price if not set
         if (totalPrice == null && unitPrice != null && quantity != null) {
             this.totalPrice = unitPrice.multiply(BigDecimal.valueOf(quantity));
@@ -116,7 +123,7 @@ public class OrderItem {
     @PreUpdate
     protected void onUpdate() {
         this.updatedAt = LocalDateTime.now();
-        
+
         // Recalculate total price if quantity or unit price changed
         if (unitPrice != null && quantity != null) {
             this.totalPrice = unitPrice.multiply(BigDecimal.valueOf(quantity));
@@ -126,7 +133,7 @@ public class OrderItem {
     // Custom setters with business logic
     public void setProduct(Product product) {
         this.product = product;
-        
+
         // Update product information when product is set
         if (product != null) {
             this.productName = product.getName();
@@ -138,7 +145,7 @@ public class OrderItem {
 
     public void setQuantity(Integer quantity) {
         this.quantity = quantity;
-        
+
         // Recalculate total price when quantity changes
         if (unitPrice != null && quantity != null) {
             this.totalPrice = unitPrice.multiply(BigDecimal.valueOf(quantity));
@@ -147,7 +154,7 @@ public class OrderItem {
 
     public void setUnitPrice(BigDecimal unitPrice) {
         this.unitPrice = unitPrice;
-        
+
         // Recalculate total price when unit price changes
         if (unitPrice != null && quantity != null) {
             this.totalPrice = unitPrice.multiply(BigDecimal.valueOf(quantity));

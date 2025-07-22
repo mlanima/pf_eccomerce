@@ -2,9 +2,9 @@ package com.horseriding.ecommerce.users.dtos.requests;
 
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
+import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import lombok.AllArgsConstructor;
 
 /**
  * DTO for user login requests.
@@ -13,12 +13,14 @@ import lombok.AllArgsConstructor;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class UserLoginRequest {
+public final class UserLoginRequest {
 
+    /** User's email address for authentication. */
     @Email(message = "Email should be valid")
     @NotBlank(message = "Email is required")
     private String email;
 
+    /** User's password for authentication. */
     @NotBlank(message = "Password is required")
     private String password;
 }

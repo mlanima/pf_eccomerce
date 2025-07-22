@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
+import Link from "next/link";
 import "@/styles/globals.css";
 
 const inter = Inter({ subsets: ["latin"] });
@@ -26,30 +27,36 @@ export default function RootLayout({
                   Horse Riding Store
                 </h1>
                 <div className="hidden md:flex space-x-6">
-                  <a href="/" className="text-gray-600 hover:text-gray-900">
+                  <Link href="/" className="text-gray-600 hover:text-gray-900">
                     Home
-                  </a>
-                  <a
+                  </Link>
+                  <Link
                     href="/products"
                     className="text-gray-600 hover:text-gray-900"
                   >
                     Products
-                  </a>
-                  <a
+                  </Link>
+                  <Link
                     href="/categories"
                     className="text-gray-600 hover:text-gray-900"
                   >
                     Categories
-                  </a>
+                  </Link>
                 </div>
               </div>
               <div className="flex items-center space-x-4">
-                <a href="/cart" className="text-gray-600 hover:text-gray-900">
+                <Link
+                  href="/cart"
+                  className="text-gray-600 hover:text-gray-900"
+                >
                   Cart
-                </a>
-                <a href="/login" className="text-gray-600 hover:text-gray-900">
+                </Link>
+                <Link
+                  href="/login"
+                  className="text-gray-600 hover:text-gray-900"
+                >
                   Login
-                </a>
+                </Link>
               </div>
             </div>
           </nav>

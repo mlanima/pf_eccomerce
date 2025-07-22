@@ -1,13 +1,12 @@
 package com.horseriding.ecommerce.products.dtos.requests;
 
 import jakarta.validation.constraints.*;
-import lombok.Data;
-import lombok.NoArgsConstructor;
-import lombok.AllArgsConstructor;
-
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.Map;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
 /**
  * DTO for product creation requests with validation for admin operations.
@@ -26,7 +25,10 @@ public class ProductCreateRequest {
 
     @NotNull(message = "Price is required")
     @DecimalMin(value = "0.01", message = "Price must be greater than 0")
-    @Digits(integer = 8, fraction = 2, message = "Price must have at most 8 integer digits and 2 decimal places")
+    @Digits(
+            integer = 8,
+            fraction = 2,
+            message = "Price must have at most 8 integer digits and 2 decimal places")
     private BigDecimal price;
 
     @Min(value = 0, message = "Stock quantity cannot be negative")

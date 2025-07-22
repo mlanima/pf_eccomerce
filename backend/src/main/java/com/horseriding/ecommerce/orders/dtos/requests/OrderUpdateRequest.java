@@ -2,9 +2,9 @@ package com.horseriding.ecommerce.orders.dtos.requests;
 
 import com.horseriding.ecommerce.orders.OrderStatus;
 import jakarta.validation.constraints.Size;
+import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import lombok.AllArgsConstructor;
 
 /**
  * DTO for order update requests for admin status updates.

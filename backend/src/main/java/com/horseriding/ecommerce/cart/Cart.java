@@ -3,25 +3,26 @@ package com.horseriding.ecommerce.cart;
 import com.horseriding.ecommerce.users.User;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
-import lombok.Data;
-import lombok.EqualsAndHashCode;
-import lombok.NoArgsConstructor;
-import lombok.ToString;
-
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
+import lombok.ToString;
 
 /**
  * Cart entity representing a user's shopping cart.
  * Contains cart items and provides methods for cart management.
  */
 @Entity
-@Table(name = "carts", indexes = {
-    @Index(name = "idx_cart_user", columnList = "user_id", unique = true),
-    @Index(name = "idx_cart_updated_at", columnList = "updated_at")
-})
+@Table(
+        name = "carts",
+        indexes = {
+            @Index(name = "idx_cart_user", columnList = "user_id", unique = true),
+            @Index(name = "idx_cart_updated_at", columnList = "updated_at")
+        })
 @Data
 @NoArgsConstructor
 @EqualsAndHashCode(onlyExplicitlyIncluded = true)
@@ -38,7 +39,11 @@ public class Cart {
     @NotNull(message = "User is required")
     private User user;
 
-    @OneToMany(mappedBy = "cart", cascade = CascadeType.ALL, fetch = FetchType.LAZY, orphanRemoval = true)
+    @OneToMany(
+            mappedBy = "cart",
+            cascade = CascadeType.ALL,
+            fetch = FetchType.LAZY,
+            orphanRemoval = true)
     private List<CartItem> items = new ArrayList<>();
 
     @Column(name = "session_id")
@@ -73,7 +78,7 @@ public class Cart {
         if (items == null) {
             items = new ArrayList<>();
         }
-        
+
         // Check if item with same product already exists
         CartItem existingItem = findItemByProductId(item.getProduct().getId());
         if (existingItem != null) {
@@ -105,8 +110,10 @@ public class Cart {
     public CartItem findItemByProductId(Long productId) {
         if (items != null && productId != null) {
             return items.stream()
-                    .filter(item -> item.getProduct() != null && 
-                                  productId.equals(item.getProduct().getId()))
+                    .filter(
+                            item ->
+                                    item.getProduct() != null
+                                            && productId.equals(item.getProduct().getId()))
                     .findFirst()
                     .orElse(null);
         }
@@ -149,9 +156,7 @@ public class Cart {
         if (items == null) {
             return BigDecimal.ZERO;
         }
-        return items.stream()
-                .map(CartItem::getTotalPrice)
-                .reduce(BigDecimal.ZERO, BigDecimal::add);
+        return items.stream().map(CartItem::getTotalPrice).reduce(BigDecimal.ZERO, BigDecimal::add);
     }
 
     public boolean hasItem(Long productId) {

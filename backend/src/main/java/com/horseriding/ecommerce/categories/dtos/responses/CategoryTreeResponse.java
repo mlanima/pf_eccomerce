@@ -1,10 +1,9 @@
 package com.horseriding.ecommerce.categories.dtos.responses;
 
+import java.util.List;
+import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import lombok.AllArgsConstructor;
-
-import java.util.List;
 
 /**
  * DTO for hierarchical category tree display.

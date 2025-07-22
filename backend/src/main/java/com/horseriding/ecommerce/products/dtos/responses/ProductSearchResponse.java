@@ -1,11 +1,9 @@
 package com.horseriding.ecommerce.products.dtos.responses;
 
+import java.math.BigDecimal;
+import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import lombok.AllArgsConstructor;
-
-import java.math.BigDecimal;
-import java.util.List;
 
 /**
  * DTO for product search results with pagination.

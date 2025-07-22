@@ -1,13 +1,12 @@
 package com.horseriding.ecommerce.orders.dtos.responses;
 
 import com.horseriding.ecommerce.orders.OrderStatus;
-import lombok.Data;
-import lombok.NoArgsConstructor;
-import lombok.AllArgsConstructor;
-
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
 /**
  * DTO for order responses with order details and items.
@@ -73,8 +72,10 @@ public class OrderResponse {
     }
 
     public boolean isPaid() {
-        return status == OrderStatus.PAID || status == OrderStatus.PROCESSING || 
-               status == OrderStatus.SHIPPED || status == OrderStatus.DELIVERED;
+        return status == OrderStatus.PAID
+                || status == OrderStatus.PROCESSING
+                || status == OrderStatus.SHIPPED
+                || status == OrderStatus.DELIVERED;
     }
 
     public boolean isCompleted() {

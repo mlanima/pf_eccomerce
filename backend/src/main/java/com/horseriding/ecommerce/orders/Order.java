@@ -3,28 +3,29 @@ package com.horseriding.ecommerce.orders;
 import com.horseriding.ecommerce.users.User;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.*;
-import lombok.Data;
-import lombok.EqualsAndHashCode;
-import lombok.NoArgsConstructor;
-import lombok.ToString;
-
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
+import lombok.ToString;
 
 /**
  * Order entity representing customer orders with PayPal payment integration.
  * Contains order information, shipping details from PayPal, and order items.
  */
 @Entity
-@Table(name = "orders", indexes = {
-    @Index(name = "idx_order_user", columnList = "user_id"),
-    @Index(name = "idx_order_status", columnList = "status"),
-    @Index(name = "idx_order_paypal_payment", columnList = "paypal_payment_id"),
-    @Index(name = "idx_order_created_at", columnList = "created_at"),
-    @Index(name = "idx_order_tracking", columnList = "tracking_number")
-})
+@Table(
+        name = "orders",
+        indexes = {
+            @Index(name = "idx_order_user", columnList = "user_id"),
+            @Index(name = "idx_order_status", columnList = "status"),
+            @Index(name = "idx_order_paypal_payment", columnList = "paypal_payment_id"),
+            @Index(name = "idx_order_created_at", columnList = "created_at"),
+            @Index(name = "idx_order_tracking", columnList = "tracking_number")
+        })
 @Data
 @NoArgsConstructor
 @EqualsAndHashCode(onlyExplicitlyIncluded = true)
@@ -85,7 +86,10 @@ public class Order {
     @Column(name = "total_amount", nullable = false, precision = 10, scale = 2)
     @NotNull(message = "Total amount is required")
     @DecimalMin(value = "0.01", message = "Total amount must be greater than 0")
-    @Digits(integer = 8, fraction = 2, message = "Total amount must have at most 8 integer digits and 2 decimal places")
+    @Digits(
+            integer = 8,
+            fraction = 2,
+            message = "Total amount must have at most 8 integer digits and 2 decimal places")
     private BigDecimal totalAmount;
 
     @Column(name = "subtotal_amount", nullable = false, precision = 10, scale = 2)
@@ -166,7 +170,7 @@ public class Order {
     @PreUpdate
     protected void onUpdate() {
         this.updatedAt = LocalDateTime.now();
-        
+
         // Set timestamps based on status changes
         if (status == OrderStatus.SHIPPED && shippedAt == null) {
             this.shippedAt = LocalDateTime.now();
@@ -212,8 +216,10 @@ public class Order {
     }
 
     public boolean isPaid() {
-        return status == OrderStatus.PAID || status == OrderStatus.PROCESSING || 
-               status == OrderStatus.SHIPPED || status == OrderStatus.DELIVERED;
+        return status == OrderStatus.PAID
+                || status == OrderStatus.PROCESSING
+                || status == OrderStatus.SHIPPED
+                || status == OrderStatus.DELIVERED;
     }
 
     public boolean isShippable() {

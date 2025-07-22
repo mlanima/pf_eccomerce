@@ -1,12 +1,11 @@
 package com.horseriding.ecommerce.orders.dtos.requests;
 
 import jakarta.validation.constraints.*;
-import lombok.Data;
-import lombok.NoArgsConstructor;
-import lombok.AllArgsConstructor;
-
 import java.math.BigDecimal;
 import java.util.List;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
 /**
  * DTO for order creation requests during order placement.
@@ -54,7 +53,10 @@ public class OrderCreateRequest {
 
     @NotNull(message = "Total amount is required")
     @DecimalMin(value = "0.01", message = "Total amount must be greater than 0")
-    @Digits(integer = 8, fraction = 2, message = "Total amount must have at most 8 integer digits and 2 decimal places")
+    @Digits(
+            integer = 8,
+            fraction = 2,
+            message = "Total amount must have at most 8 integer digits and 2 decimal places")
     private BigDecimal totalAmount;
 
     @NotNull(message = "Subtotal amount is required")
@@ -81,7 +83,7 @@ public class OrderCreateRequest {
     @NoArgsConstructor
     @AllArgsConstructor
     public static class OrderItemCreateRequest {
-        
+
         @NotNull(message = "Product ID is required")
         private Long productId;
 

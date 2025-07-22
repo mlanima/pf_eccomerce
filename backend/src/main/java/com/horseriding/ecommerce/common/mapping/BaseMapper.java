@@ -1,8 +1,7 @@
 package com.horseriding.ecommerce.common.mapping;
 
-import org.mapstruct.MappingTarget;
-
 import java.util.List;
+import org.mapstruct.MappingTarget;
 
 /**
  * Base interface for all MapStruct mappers providing common mapping methods.

@@ -1,10 +1,9 @@
 package com.horseriding.ecommerce.common.mapping;
 
 import com.horseriding.ecommerce.common.dtos.responses.PaginationResponse;
+import java.util.List;
 import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Component;
-
-import java.util.List;
 
 /**
  * Utility class for mapping Spring Data Page objects to PaginationResponse DTOs.
@@ -28,8 +27,7 @@ public class PaginationMapper {
                 page.getTotalPages(),
                 page.isFirst(),
                 page.isLast(),
-                page.isEmpty()
-        );
+                page.isEmpty());
     }
 
     /**
@@ -41,7 +39,8 @@ public class PaginationMapper {
      * @param <T> Type of DTO content
      * @return PaginationResponse with provided data
      */
-    public <T> PaginationResponse<T> toPaginationResponse(List<T> content, int page, int size, long totalElements) {
+    public <T> PaginationResponse<T> toPaginationResponse(
+            List<T> content, int page, int size, long totalElements) {
         return new PaginationResponse<>(content, page, size, totalElements);
     }
 }

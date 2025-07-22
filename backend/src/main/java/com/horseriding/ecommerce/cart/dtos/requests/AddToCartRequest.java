@@ -1,9 +1,9 @@
 package com.horseriding.ecommerce.cart.dtos.requests;
 
 import jakarta.validation.constraints.*;
+import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import lombok.AllArgsConstructor;
 
 /**
  * DTO for adding items to cart with product and quantity validation.

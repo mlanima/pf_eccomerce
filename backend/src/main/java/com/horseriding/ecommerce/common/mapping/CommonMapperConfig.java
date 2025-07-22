@@ -8,9 +8,7 @@ import org.mapstruct.ReportingPolicy;
  * This ensures consistent mapping behavior across the application.
  */
 @MapperConfig(
-    componentModel = "spring",
-    unmappedTargetPolicy = ReportingPolicy.IGNORE,
-    unmappedSourcePolicy = ReportingPolicy.IGNORE
-)
-public interface CommonMapperConfig {
-}
+        componentModel = "spring",
+        unmappedTargetPolicy = ReportingPolicy.IGNORE,
+        unmappedSourcePolicy = ReportingPolicy.IGNORE)
+public interface CommonMapperConfig {}

@@ -1,11 +1,10 @@
 package com.horseriding.ecommerce.common.mapping;
 
-import org.springframework.beans.BeanUtils;
-import org.springframework.stereotype.Component;
-
 import java.lang.reflect.Constructor;
 import java.util.List;
 import java.util.stream.Collectors;
+import org.springframework.beans.BeanUtils;
+import org.springframework.stereotype.Component;
 
 /**
  * Utility class providing common mapping functionality for DTOs and entities.
@@ -54,7 +53,8 @@ public class MappingUtils {
             BeanUtils.copyProperties(source, target);
             return target;
         } catch (Exception e) {
-            throw new RuntimeException("Failed to map object to class: " + targetClass.getSimpleName(), e);
+            throw new RuntimeException(
+                    "Failed to map object to class: " + targetClass.getSimpleName(), e);
         }
     }
 
@@ -89,9 +89,10 @@ public class MappingUtils {
 
         try {
             for (String fieldName : requiredFields) {
-                Object fieldValue = BeanUtils.getPropertyDescriptor(object.getClass(), fieldName)
-                        .getReadMethod()
-                        .invoke(object);
+                Object fieldValue =
+                        BeanUtils.getPropertyDescriptor(object.getClass(), fieldName)
+                                .getReadMethod()
+                                .invoke(object);
                 if (fieldValue == null) {
                     return false;
                 }

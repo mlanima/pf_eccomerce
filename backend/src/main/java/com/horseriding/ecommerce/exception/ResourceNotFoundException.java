@@ -8,14 +8,17 @@ import org.springframework.web.bind.annotation.ResponseStatus;
  * This exception is mapped to HTTP 404 Not Found response.
  */
 @ResponseStatus(HttpStatus.NOT_FOUND)
-public class ResourceNotFoundException extends RuntimeException {
+public final class ResourceNotFoundException extends RuntimeException {
+
+    /** Serial version UID. */
+    private static final long serialVersionUID = 1L;
 
     /**
      * Constructs a new resource not found exception with the specified detail message.
      *
      * @param message the detail message
      */
-    public ResourceNotFoundException(String message) {
+    public ResourceNotFoundException(final String message) {
         super(message);
     }
 
@@ -25,7 +28,7 @@ public class ResourceNotFoundException extends RuntimeException {
      * @param message the detail message
      * @param cause the cause
      */
-    public ResourceNotFoundException(String message, Throwable cause) {
+    public ResourceNotFoundException(final String message, final Throwable cause) {
         super(message, cause);
     }
 
@@ -36,7 +39,8 @@ public class ResourceNotFoundException extends RuntimeException {
      * @param fieldName the name of the identifier field
      * @param fieldValue the value of the identifier
      */
-    public ResourceNotFoundException(String resourceName, String fieldName, Object fieldValue) {
+    public ResourceNotFoundException(
+            final String resourceName, final String fieldName, final Object fieldValue) {
         super(String.format("%s not found with %s: '%s'", resourceName, fieldName, fieldValue));
     }
 }
