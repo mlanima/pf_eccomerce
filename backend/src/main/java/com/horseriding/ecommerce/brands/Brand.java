@@ -19,8 +19,7 @@ import java.util.List;
  */
 @Entity
 @Table(name = "brands", indexes = {
-    @Index(name = "idx_brand_name", columnList = "name"),
-    @Index(name = "idx_brand_active", columnList = "active")
+    @Index(name = "idx_brand_name", columnList = "name")
 })
 @Data
 @NoArgsConstructor
@@ -54,9 +53,6 @@ public class Brand {
     @Size(max = 100, message = "Country of origin must not exceed 100 characters")
     private String countryOfOrigin;
 
-    @Column(nullable = false)
-    private boolean active = true;
-
     @OneToMany(mappedBy = "brand", fetch = FetchType.LAZY)
     private List<Product> products = new ArrayList<>();
 
@@ -70,13 +66,11 @@ public class Brand {
     // Constructor for creating new brands
     public Brand(String name) {
         this.name = name;
-        this.active = true;
     }
 
     public Brand(String name, String description) {
         this.name = name;
         this.description = description;
-        this.active = true;
     }
 
     // JPA lifecycle callbacks for audit fields

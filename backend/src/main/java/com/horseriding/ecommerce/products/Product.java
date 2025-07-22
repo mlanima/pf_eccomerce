@@ -25,7 +25,6 @@ import java.util.Map;
     @Index(name = "idx_product_name", columnList = "name"),
     @Index(name = "idx_product_category", columnList = "category_id"),
     @Index(name = "idx_product_brand", columnList = "brand_id"),
-    @Index(name = "idx_product_active", columnList = "active"),
     @Index(name = "idx_product_price", columnList = "price"),
     @Index(name = "idx_product_stock", columnList = "stock_quantity")
 })
@@ -79,8 +78,7 @@ public class Product {
     @Column(name = "spec_value")
     private Map<String, String> specifications = new HashMap<>();
 
-    @Column(nullable = false)
-    private boolean active = true;
+
 
     @Column(name = "featured")
     private boolean featured = false;
@@ -118,7 +116,6 @@ public class Product {
         this.description = description;
         this.price = price;
         this.category = category;
-        this.active = true;
         this.stockQuantity = 0;
     }
 

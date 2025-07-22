@@ -33,7 +33,6 @@ public class BrandMapper {
                 .logoUrl(brand.getLogoUrl())
                 .websiteUrl(brand.getWebsiteUrl())
                 .countryOfOrigin(brand.getCountryOfOrigin())
-                .active(brand.isActive())
                 .productCount(brand.getProductCount())
                 .createdAt(brand.getCreatedAt())
                 .updatedAt(brand.getUpdatedAt())
@@ -73,7 +72,6 @@ public class BrandMapper {
         brand.setLogoUrl(request.getLogoUrl());
         brand.setWebsiteUrl(request.getWebsiteUrl());
         brand.setCountryOfOrigin(request.getCountryOfOrigin());
-        brand.setActive(true);
         
         return brand;
     }
@@ -95,7 +93,6 @@ public class BrandMapper {
         brand.setLogoUrl(request.getLogoUrl());
         brand.setWebsiteUrl(request.getWebsiteUrl());
         brand.setCountryOfOrigin(request.getCountryOfOrigin());
-        brand.setActive(request.isActive());
         
         return brand;
     }

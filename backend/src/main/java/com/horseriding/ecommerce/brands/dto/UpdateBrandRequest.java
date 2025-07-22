@@ -31,6 +31,4 @@ public class UpdateBrandRequest {
 
     @Size(max = 100, message = "Country of origin must not exceed 100 characters")
     private String countryOfOrigin;
-    
-    private boolean active;
 }

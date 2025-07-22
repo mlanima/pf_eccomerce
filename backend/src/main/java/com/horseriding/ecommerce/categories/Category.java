@@ -19,8 +19,7 @@ import java.util.List;
 @Entity
 @Table(name = "categories", indexes = {
     @Index(name = "idx_category_name", columnList = "name"),
-    @Index(name = "idx_category_parent", columnList = "parent_id"),
-    @Index(name = "idx_category_active", columnList = "active")
+    @Index(name = "idx_category_parent", columnList = "parent_id")
 })
 @Data
 @NoArgsConstructor
@@ -49,9 +48,6 @@ public class Category {
     @OneToMany(mappedBy = "parent", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private List<Category> subcategories = new ArrayList<>();
 
-    @Column(nullable = false)
-    private boolean active = true;
-
     @Column(name = "display_order")
     private Integer displayOrder = 0;
 
@@ -66,7 +62,6 @@ public class Category {
     public Category(String name, String description) {
         this.name = name;
         this.description = description;
-        this.active = true;
     }
 
     // Constructor for creating subcategories
@@ -74,7 +69,6 @@ public class Category {
         this.name = name;
         this.description = description;
         this.parent = parent;
-        this.active = true;
     }
 
     // JPA lifecycle callbacks for audit fields

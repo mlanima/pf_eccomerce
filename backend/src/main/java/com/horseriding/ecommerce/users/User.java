@@ -58,9 +58,6 @@ public class User {
     @NotNull(message = "User role is required")
     private UserRole role = UserRole.CUSTOMER;
 
-    @Column(name = "is_active", nullable = false)
-    private boolean active = true;
-
     // Audit fields
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
@@ -75,7 +72,6 @@ public class User {
         this.firstName = firstName;
         this.lastName = lastName;
         this.role = role != null ? role : UserRole.CUSTOMER;
-        this.active = true;
     }
 
     // JPA lifecycle callbacks for audit fields

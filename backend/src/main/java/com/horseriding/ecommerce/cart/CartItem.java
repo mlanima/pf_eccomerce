@@ -111,7 +111,7 @@ public class CartItem {
     }
 
     public boolean isProductActive() {
-        return product != null && product.isActive();
+        return product != null;
     }
 
     public boolean isValid() {
@@ -121,9 +121,6 @@ public class CartItem {
     public String getValidationMessage() {
         if (product == null) {
             return "Product not found";
-        }
-        if (!product.isActive()) {
-            return "Product is no longer available";
         }
         if (!product.isInStock()) {
             return "Product is out of stock";

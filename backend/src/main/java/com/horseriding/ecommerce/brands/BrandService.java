@@ -25,19 +25,19 @@ public class BrandService {
     private final BrandRepository brandRepository;
 
     /**
-     * Get all active brands.
+     * Get all brands.
      */
-    public List<Brand> getAllActiveBrands() {
-        log.debug("Fetching all active brands");
-        return brandRepository.findByActiveTrue();
+    public List<Brand> getAllBrands() {
+        log.debug("Fetching all brands");
+        return brandRepository.findAll();
     }
 
     /**
-     * Get all active brands with pagination.
+     * Get all brands with pagination.
      */
-    public Page<Brand> getAllActiveBrands(Pageable pageable) {
-        log.debug("Fetching active brands with pagination: {}", pageable);
-        return brandRepository.findByActiveTrue(pageable);
+    public Page<Brand> getAllBrands(Pageable pageable) {
+        log.debug("Fetching brands with pagination: {}", pageable);
+        return brandRepository.findAll(pageable);
     }
 
     /**
@@ -63,7 +63,7 @@ public class BrandService {
      */
     public Page<Brand> searchBrandsByName(String name, Pageable pageable) {
         log.debug("Searching brands by name: {} with pagination: {}", name, pageable);
-        return brandRepository.findByNameContainingIgnoreCaseAndActiveTrue(name, pageable);
+        return brandRepository.findByNameContainingIgnoreCase(name, pageable);
     }
 
     /**
@@ -71,15 +71,7 @@ public class BrandService {
      */
     public List<Brand> getBrandsByCountry(String countryOfOrigin) {
         log.debug("Fetching brands by country: {}", countryOfOrigin);
-        return brandRepository.findByCountryOfOriginIgnoreCaseAndActiveTrue(countryOfOrigin);
-    }
-
-    /**
-     * Get brands that have active products.
-     */
-    public List<Brand> getBrandsWithActiveProducts() {
-        log.debug("Fetching brands with active products");
-        return brandRepository.findBrandsWithActiveProducts();
+        return brandRepository.findByCountryOfOriginIgnoreCase(countryOfOrigin);
     }
 
     /**
@@ -120,7 +112,6 @@ public class BrandService {
         existingBrand.setLogoUrl(brandDetails.getLogoUrl());
         existingBrand.setWebsiteUrl(brandDetails.getWebsiteUrl());
         existingBrand.setCountryOfOrigin(brandDetails.getCountryOfOrigin());
-        existingBrand.setActive(brandDetails.isActive());
         
         Brand updatedBrand = brandRepository.save(existingBrand);
         log.info("Updated brand with ID: {}", updatedBrand.getId());
@@ -128,11 +119,11 @@ public class BrandService {
     }
 
     /**
-     * Soft delete a brand (set active to false).
+     * Delete a brand.
      */
     @Transactional
     public void deleteBrand(Long id) {
-        log.debug("Soft deleting brand with ID: {}", id);
+        log.debug("Deleting brand with ID: {}", id);
         
         Brand brand = getBrandById(id);
         
@@ -144,51 +135,15 @@ public class BrandService {
                     "Please reassign or remove products first.");
         }
         
-        brand.setActive(false);
-        brandRepository.save(brand);
-        log.info("Soft deleted brand with ID: {}", id);
-    }
-
-    /**
-     * Permanently delete a brand.
-     */
-    @Transactional
-    public void permanentlyDeleteBrand(Long id) {
-        log.debug("Permanently deleting brand with ID: {}", id);
-        
-        Brand brand = getBrandById(id);
-        
-        // Check if brand has products
-        if (brand.hasProducts()) {
-            throw new IllegalStateException("Cannot permanently delete brand that has associated products. " +
-                    "Please reassign or remove products first.");
-        }
-        
         brandRepository.delete(brand);
-        log.info("Permanently deleted brand with ID: {}", id);
+        log.info("Deleted brand with ID: {}", id);
     }
 
     /**
-     * Reactivate a soft-deleted brand.
+     * Get total count of brands.
      */
-    @Transactional
-    public Brand reactivateBrand(Long id) {
-        log.debug("Reactivating brand with ID: {}", id);
-        
-        Brand brand = brandRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Brand not found with ID: " + id));
-        
-        brand.setActive(true);
-        Brand reactivatedBrand = brandRepository.save(brand);
-        log.info("Reactivated brand with ID: {}", id);
-        return reactivatedBrand;
-    }
-
-    /**
-     * Get total count of active brands.
-     */
-    public long getActiveBrandCount() {
-        return brandRepository.countByActiveTrue();
+    public long getBrandCount() {
+        return brandRepository.count();
     }
     
     /**
@@ -197,7 +152,7 @@ public class BrandService {
      */
     public Page<Brand> searchBrands(String query, Pageable pageable) {
         log.debug("Searching brands by query: {} with pagination: {}", query, pageable);
-        return brandRepository.findByNameContainingIgnoreCaseAndActiveTrue(query, pageable);
+        return brandRepository.findByNameContainingIgnoreCase(query, pageable);
     }
     
     /**
@@ -206,22 +161,9 @@ public class BrandService {
      */
     public List<Brand> getBrandsOrderedByProductCount() {
         log.debug("Fetching brands ordered by product count");
-        List<Brand> brands = brandRepository.findByActiveTrue();
+        List<Brand> brands = brandRepository.findAll();
         brands.sort(Comparator.comparing(Brand::getProductCount).reversed());
         return brands;
-    }
-    
-    /**
-     * Deactivate a brand (soft delete).
-     * Used for admin brand management.
-     */
-    @Transactional
-    public void deactivateBrand(Long id) {
-        log.debug("Deactivating brand with ID: {}", id);
-        Brand brand = getBrandById(id);
-        brand.setActive(false);
-        brandRepository.save(brand);
-        log.info("Deactivated brand with ID: {}", id);
     }
     
     /**

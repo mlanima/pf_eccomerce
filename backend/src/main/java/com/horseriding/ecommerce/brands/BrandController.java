@@ -57,7 +57,7 @@ public class BrandController {
                    Sort.by(sortBy).ascending();
         
         Pageable pageable = PageRequest.of(page, size, sort);
-        Page<Brand> brandsPage = brandService.getAllActiveBrands(pageable);
+        Page<Brand> brandsPage = brandService.getAllBrands(pageable);
         
         List<BrandResponse> brandResponses = brandMapper.toResponseList(brandsPage.getContent());
         Page<BrandResponse> responsePage = new PageImpl<>(
