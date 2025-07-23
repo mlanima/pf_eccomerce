@@ -243,6 +243,15 @@ public class JwtTokenProvider {
     }
 
     /**
+     * Gets the access token expiration time in seconds.
+     *
+     * @return the access token expiration time in seconds
+     */
+    public long getAccessTokenExpirationInSeconds() {
+        return accessTokenExpiration / 1000;
+    }
+
+    /**
      * Gets the signing key for JWT token signing.
      *
      * @return the signing key

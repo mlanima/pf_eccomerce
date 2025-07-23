@@ -1,5 +1,6 @@
 package com.horseriding.ecommerce.categories;
 
+import com.horseriding.ecommerce.auth.SecurityUtils;
 import com.horseriding.ecommerce.categories.dtos.requests.CategoryCreateRequest;
 import com.horseriding.ecommerce.categories.dtos.requests.CategoryUpdateRequest;
 import com.horseriding.ecommerce.categories.dtos.responses.CategoryResponse;
@@ -34,22 +35,12 @@ public class CategoryService {
     /**
      * Creates a new category.
      *
-     * @param currentUserId the ID of the user making the request
      * @param request the category creation request
      * @return the created category
-     * @throws AccessDeniedException if the current user is not an admin
      * @throws IllegalArgumentException if category name already exists
      */
     @Transactional
-    public CategoryResponse createCategory(final Long currentUserId, final CategoryCreateRequest request) {
-        // Check if current user is an admin
-        User currentUser = userRepository.findById(currentUserId)
-                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
-
-        if (!currentUser.hasAdminPrivileges()) {
-            throw new AccessDeniedException("Only admins can create categories");
-        }
-
+    public CategoryResponse createCategory(final CategoryCreateRequest request) {
         // Check if category name already exists
         if (categoryRepository.existsByName(request.getName())) {
             throw new IllegalArgumentException("Category name already exists");
@@ -76,25 +67,14 @@ public class CategoryService {
     /**
      * Updates an existing category.
      *
-     * @param currentUserId the ID of the user making the request
      * @param categoryId the ID of the category to update
      * @param request the category update request
      * @return the updated category
-     * @throws AccessDeniedException if the current user is not an admin
      * @throws ResourceNotFoundException if the category is not found
      * @throws IllegalArgumentException if category name already exists for another category
      */
     @Transactional
-    public CategoryResponse updateCategory(
-            final Long currentUserId, final Long categoryId, final CategoryUpdateRequest request) {
-        // Check if current user is an admin
-        User currentUser = userRepository.findById(currentUserId)
-                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
-
-        if (!currentUser.hasAdminPrivileges()) {
-            throw new AccessDeniedException("Only admins can update categories");
-        }
-
+    public CategoryResponse updateCategory(final Long categoryId, final CategoryUpdateRequest request) {
         // Get category to update
         Category category = categoryRepository.findById(categoryId)
                 .orElseThrow(() -> new ResourceNotFoundException("Category not found"));
@@ -140,22 +120,12 @@ public class CategoryService {
     /**
      * Deletes a category.
      *
-     * @param currentUserId the ID of the user making the request
      * @param categoryId the ID of the category to delete
-     * @throws AccessDeniedException if the current user is not an admin
      * @throws ResourceNotFoundException if the category is not found
      * @throws IllegalArgumentException if the category has subcategories
      */
     @Transactional
-    public void deleteCategory(final Long currentUserId, final Long categoryId) {
-        // Check if current user is an admin
-        User currentUser = userRepository.findById(currentUserId)
-                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
-
-        if (!currentUser.hasAdminPrivileges()) {
-            throw new AccessDeniedException("Only admins can delete categories");
-        }
-
+    public void deleteCategory(final Long categoryId) {
         // Get category to delete
         Category category = categoryRepository.findById(categoryId)
                 .orElseThrow(() -> new ResourceNotFoundException("Category not found"));

@@ -18,7 +18,7 @@ import org.springframework.transaction.annotation.Transactional;
 @RequiredArgsConstructor
 @Slf4j
 @Transactional(readOnly = true)
-public final class BrandService {
+public class BrandService {
 
     /** Repository for brand data access. */
     private final BrandRepository brandRepository;

@@ -1,5 +1,6 @@
 package com.horseriding.ecommerce.products;
 
+import com.horseriding.ecommerce.auth.SecurityUtils;
 import com.horseriding.ecommerce.brands.Brand;
 import com.horseriding.ecommerce.brands.BrandRepository;
 import com.horseriding.ecommerce.categories.Category;
@@ -68,23 +69,13 @@ public class ProductService {
     /**
      * Creates a new product.
      *
-     * @param currentUserId the ID of the user making the request
      * @param request the product creation request
      * @return the created product
-     * @throws AccessDeniedException if the current user is not an admin
      * @throws ResourceNotFoundException if the category is not found
      * @throws IllegalArgumentException if SKU already exists
      */
     @Transactional
-    public ProductDetailResponse createProduct(final Long currentUserId, final ProductCreateRequest request) {
-        // Check if current user is an admin
-        User currentUser = userRepository.findById(currentUserId)
-                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
-
-        if (!currentUser.hasAdminPrivileges()) {
-            throw new AccessDeniedException("Only admins can create products");
-        }
-
+    public ProductDetailResponse createProduct(final ProductCreateRequest request) {
         // Check if SKU already exists
         if (request.getSku() != null && productRepository.existsBySku(request.getSku())) {
             throw new IllegalArgumentException("SKU already exists");
@@ -136,25 +127,14 @@ public class ProductService {
     /**
      * Updates an existing product.
      *
-     * @param currentUserId the ID of the user making the request
      * @param productId the ID of the product to update
      * @param request the product update request
      * @return the updated product
-     * @throws AccessDeniedException if the current user is not an admin
      * @throws ResourceNotFoundException if the product or category is not found
      * @throws IllegalArgumentException if SKU already exists for another product
      */
     @Transactional
-    public ProductDetailResponse updateProduct(
-            final Long currentUserId, final Long productId, final ProductUpdateRequest request) {
-        // Check if current user is an admin
-        User currentUser = userRepository.findById(currentUserId)
-                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
-
-        if (!currentUser.hasAdminPrivileges()) {
-            throw new AccessDeniedException("Only admins can update products");
-        }
-
+    public ProductDetailResponse updateProduct(final Long productId, final ProductUpdateRequest request) {
         // Get product to update
         Product product = productRepository.findById(productId)
                 .orElseThrow(() -> new ResourceNotFoundException("Product not found"));
@@ -218,21 +198,11 @@ public class ProductService {
     /**
      * Deletes a product.
      *
-     * @param currentUserId the ID of the user making the request
      * @param productId the ID of the product to delete
-     * @throws AccessDeniedException if the current user is not an admin
      * @throws ResourceNotFoundException if the product is not found
      */
     @Transactional
-    public void deleteProduct(final Long currentUserId, final Long productId) {
-        // Check if current user is an admin
-        User currentUser = userRepository.findById(currentUserId)
-                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
-
-        if (!currentUser.hasAdminPrivileges()) {
-            throw new AccessDeniedException("Only admins can delete products");
-        }
-
+    public void deleteProduct(final Long productId) {
         // Get product to delete
         Product product = productRepository.findById(productId)
                 .orElseThrow(() -> new ResourceNotFoundException("Product not found"));
@@ -327,25 +297,14 @@ public class ProductService {
     /**
      * Updates product stock quantity.
      *
-     * @param currentUserId the ID of the user making the request
      * @param productId the ID of the product to update
      * @param quantity the new stock quantity
      * @return the updated product
-     * @throws AccessDeniedException if the current user is not an admin
      * @throws ResourceNotFoundException if the product is not found
      * @throws IllegalArgumentException if quantity is negative
      */
     @Transactional
-    public ProductDetailResponse updateProductStock(
-            final Long currentUserId, final Long productId, final Integer quantity) {
-        // Check if current user is an admin
-        User currentUser = userRepository.findById(currentUserId)
-                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
-
-        if (!currentUser.hasAdminPrivileges()) {
-            throw new AccessDeniedException("Only admins can update product stock");
-        }
-
+    public ProductDetailResponse updateProductStock(final Long productId, final Integer quantity) {
         // Validate quantity
         if (quantity < 0) {
             throw new IllegalArgumentException("Stock quantity cannot be negative");
@@ -376,20 +335,10 @@ public class ProductService {
     /**
      * Gets all products with low stock.
      *
-     * @param currentUserId the ID of the user making the request
      * @param pageable pagination information
      * @return page of products with low stock
-     * @throws AccessDeniedException if the current user is not an admin
      */
-    public Page<ProductResponse> getLowStockProducts(final Long currentUserId, final Pageable pageable) {
-        // Check if current user is an admin
-        User currentUser = userRepository.findById(currentUserId)
-                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
-
-        if (!currentUser.hasAdminPrivileges()) {
-            throw new AccessDeniedException("Only admins can view low stock products");
-        }
-
+    public Page<ProductResponse> getLowStockProducts(final Pageable pageable) {
         // Get all products and filter for low stock
         // This is not efficient for large datasets, but works for now
         // In a real application, we would add a custom query to the repository
@@ -414,20 +363,10 @@ public class ProductService {
     /**
      * Gets all out of stock products.
      *
-     * @param currentUserId the ID of the user making the request
      * @param pageable pagination information
      * @return page of out of stock products
-     * @throws AccessDeniedException if the current user is not an admin
      */
-    public Page<ProductResponse> getOutOfStockProducts(final Long currentUserId, final Pageable pageable) {
-        // Check if current user is an admin
-        User currentUser = userRepository.findById(currentUserId)
-                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
-
-        if (!currentUser.hasAdminPrivileges()) {
-            throw new AccessDeniedException("Only admins can view out of stock products");
-        }
-
+    public Page<ProductResponse> getOutOfStockProducts(final Pageable pageable) {
         // Get all products and filter for out of stock
         // This is not efficient for large datasets, but works for now
         // In a real application, we would add a custom query to the repository
@@ -453,25 +392,15 @@ public class ProductService {
     /**
      * Uploads a product image.
      *
-     * @param currentUserId the ID of the user making the request
      * @param productId the ID of the product
      * @param file the image file to upload
      * @return the URL of the uploaded image
-     * @throws AccessDeniedException if the current user is not an admin
      * @throws ResourceNotFoundException if the product is not found
      * @throws IOException if an I/O error occurs
      */
     @Transactional
-    public String uploadProductImage(final Long currentUserId, final Long productId, final MultipartFile file)
+    public String uploadProductImage(final Long productId, final MultipartFile file)
             throws IOException {
-        // Check if current user is an admin
-        User currentUser = userRepository.findById(currentUserId)
-                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
-
-        if (!currentUser.hasAdminPrivileges()) {
-            throw new AccessDeniedException("Only admins can upload product images");
-        }
-
         // Get product
         Product product = productRepository.findById(productId)
                 .orElseThrow(() -> new ResourceNotFoundException("Product not found"));
@@ -504,23 +433,13 @@ public class ProductService {
     /**
      * Removes a product image.
      *
-     * @param currentUserId the ID of the user making the request
      * @param productId the ID of the product
      * @param imageUrl the URL of the image to remove
-     * @throws AccessDeniedException if the current user is not an admin
      * @throws ResourceNotFoundException if the product is not found
      * @throws IllegalArgumentException if the image URL is not found
      */
     @Transactional
-    public void removeProductImage(final Long currentUserId, final Long productId, final String imageUrl) {
-        // Check if current user is an admin
-        User currentUser = userRepository.findById(currentUserId)
-                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
-
-        if (!currentUser.hasAdminPrivileges()) {
-            throw new AccessDeniedException("Only admins can remove product images");
-        }
-
+    public void removeProductImage(final Long productId, final String imageUrl) {
         // Get product
         Product product = productRepository.findById(productId)
                 .orElseThrow(() -> new ResourceNotFoundException("Product not found"));

@@ -12,8 +12,16 @@ services:
       MYSQL_PASSWORD: ${DB_PASSWORD:-password}
     ports:
       - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
     networks:
       - horse-riding-network
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
 
   # Spring Boot Backend
   backend:
@@ -27,8 +35,9 @@ services:
       - DB_NAME=${DB_NAME:-horse_riding_ecommerce}
       - DB_USERNAME=${DB_USERNAME:-ecommerce_user}
       - DB_PASSWORD=${DB_PASSWORD:-password}
-      - JWT_SECRET=${JWT_SECRET:-default-secret-key-change-in-production}
-      - JWT_EXPIRATION=${JWT_EXPIRATION:-86400000}
+      - JWT_SECRET=${JWT_SECRET:-defaultSecretKeyForDevelopmentEnvironmentOnlyMustBeAtLeast256Bits}
+      - JWT_ACCESS_TOKEN_EXPIRATION=${JWT_ACCESS_TOKEN_EXPIRATION:-900000}
+      - JWT_REFRESH_TOKEN_EXPIRATION=${JWT_REFRESH_TOKEN_EXPIRATION:-604800000}
       - PAYPAL_CLIENT_ID=${PAYPAL_CLIENT_ID}
       - PAYPAL_CLIENT_SECRET=${PAYPAL_CLIENT_SECRET}
       - PAYPAL_MODE=${PAYPAL_MODE:-sandbox}

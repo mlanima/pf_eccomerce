@@ -34,7 +34,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/api/brands")
 @RequiredArgsConstructor
 @Slf4j
-public final class BrandController {
+public class BrandController {
 
     /** Default page size for pagination. */
     private static final int DEFAULT_PAGE_SIZE = 20;

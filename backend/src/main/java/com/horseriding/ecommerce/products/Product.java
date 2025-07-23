@@ -52,7 +52,7 @@ import lombok.ToString;
 @NoArgsConstructor
 @EqualsAndHashCode(onlyExplicitlyIncluded = true)
 @ToString(exclude = {"category", "brand", "imageUrls", "specifications"})
-public final class Product {
+public class Product {
 
     /** Maximum length for product name. */
     private static final int MAX_NAME_LENGTH = 200;

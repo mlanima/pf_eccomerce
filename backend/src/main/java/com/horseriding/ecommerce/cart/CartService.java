@@ -1,5 +1,6 @@
 package com.horseriding.ecommerce.cart;
 
+import com.horseriding.ecommerce.auth.SecurityUtils;
 import com.horseriding.ecommerce.cart.dtos.requests.AddToCartRequest;
 import com.horseriding.ecommerce.cart.dtos.responses.CartItemResponse;
 import com.horseriding.ecommerce.cart.dtos.responses.CartResponse;
@@ -42,53 +43,48 @@ public class CartService {
     private int cartMaxAgeDays;
 
     /**
-     * Gets or creates a cart for a user.
+     * Gets or creates a cart for the current user.
      *
-     * @param userId the ID of the user
      * @return the user's cart
-     * @throws ResourceNotFoundException if the user is not found
+     * @throws IllegalStateException if no user is authenticated
      */
     @Transactional
-    public Cart getOrCreateCart(final Long userId) {
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
+    public Cart getOrCreateCart() {
+        User currentUser = SecurityUtils.getCurrentUser();
 
-        return cartRepository.findByUser(user).orElseGet(() -> {
-            Cart newCart = new Cart(user);
+        return cartRepository.findByUser(currentUser).orElseGet(() -> {
+            Cart newCart = new Cart(currentUser);
             return cartRepository.save(newCart);
         });
     }
 
     /**
-     * Gets a user's cart.
+     * Gets the current user's cart.
      *
-     * @param userId the ID of the user
      * @return the cart response with items and totals
-     * @throws ResourceNotFoundException if the user is not found
+     * @throws IllegalStateException if no user is authenticated
      */
     @Transactional(readOnly = true)
-    public CartResponse getUserCart(final Long userId) {
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
+    public CartResponse getCurrentUserCart() {
+        User currentUser = SecurityUtils.getCurrentUser();
 
-        Cart cart = cartRepository.findByUser(user).orElse(new Cart(user));
+        Cart cart = cartRepository.findByUser(currentUser).orElse(new Cart(currentUser));
 
         return mapToCartResponse(cart);
     }
 
     /**
-     * Adds an item to the cart.
+     * Adds an item to the current user's cart.
      *
-     * @param userId the ID of the user
      * @param request the add to cart request
      * @return the updated cart response
-     * @throws ResourceNotFoundException if the user or product is not found
+     * @throws IllegalStateException if no user is authenticated
+     * @throws ResourceNotFoundException if the product is not found
      * @throws IllegalArgumentException if the product is out of stock or quantity exceeds available stock
      */
     @Transactional
-    public CartResponse addToCart(final Long userId, final AddToCartRequest request) {
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
+    public CartResponse addToCart(final AddToCartRequest request) {
+        User currentUser = SecurityUtils.getCurrentUser();
 
         Product product = productRepository.findById(request.getProductId())
                 .orElseThrow(() -> new ResourceNotFoundException("Product not found"));
@@ -105,8 +101,8 @@ public class CartService {
         }
 
         // Get or create cart
-        Cart cart = cartRepository.findByUser(user).orElseGet(() -> {
-            Cart newCart = new Cart(user);
+        Cart cart = cartRepository.findByUser(currentUser).orElseGet(() -> {
+            Cart newCart = new Cart(currentUser);
             return cartRepository.save(newCart);
         });
 
@@ -133,21 +129,20 @@ public class CartService {
     }
 
     /**
-     * Updates the quantity of an item in the cart.
+     * Updates the quantity of an item in the current user's cart.
      *
-     * @param userId the ID of the user
      * @param productId the ID of the product
      * @param quantity the new quantity
      * @return the updated cart response
-     * @throws ResourceNotFoundException if the user, cart, or product is not found
+     * @throws IllegalStateException if no user is authenticated
+     * @throws ResourceNotFoundException if the cart or product is not found
      * @throws IllegalArgumentException if the product is out of stock or quantity exceeds available stock
      */
     @Transactional
-    public CartResponse updateCartItemQuantity(final Long userId, final Long productId, final Integer quantity) {
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
+    public CartResponse updateCartItemQuantity(final Long productId, final Integer quantity) {
+        User currentUser = SecurityUtils.getCurrentUser();
 
-        Cart cart = cartRepository.findByUser(user)
+        Cart cart = cartRepository.findByUser(currentUser)
                 .orElseThrow(() -> new ResourceNotFoundException("Cart not found"));
 
         Product product = productRepository.findById(productId)
@@ -178,19 +173,18 @@ public class CartService {
     }
 
     /**
-     * Removes an item from the cart.
+     * Removes an item from the current user's cart.
      *
-     * @param userId the ID of the user
      * @param productId the ID of the product
      * @return the updated cart response
-     * @throws ResourceNotFoundException if the user or cart is not found
+     * @throws IllegalStateException if no user is authenticated
+     * @throws ResourceNotFoundException if the cart is not found
      */
     @Transactional
-    public CartResponse removeFromCart(final Long userId, final Long productId) {
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
+    public CartResponse removeFromCart(final Long productId) {
+        User currentUser = SecurityUtils.getCurrentUser();
 
-        Cart cart = cartRepository.findByUser(user)
+        Cart cart = cartRepository.findByUser(currentUser)
                 .orElseThrow(() -> new ResourceNotFoundException("Cart not found"));
 
         // Remove item from cart
@@ -203,18 +197,16 @@ public class CartService {
     }
 
     /**
-     * Clears all items from the cart.
+     * Clears all items from the current user's cart.
      *
-     * @param userId the ID of the user
      * @return the empty cart response
-     * @throws ResourceNotFoundException if the user is not found
+     * @throws IllegalStateException if no user is authenticated
      */
     @Transactional
-    public CartResponse clearCart(final Long userId) {
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
+    public CartResponse clearCart() {
+        User currentUser = SecurityUtils.getCurrentUser();
 
-        Cart cart = cartRepository.findByUser(user).orElse(new Cart(user));
+        Cart cart = cartRepository.findByUser(currentUser).orElse(new Cart(currentUser));
 
         // Clear cart
         cart.clearCart();
@@ -226,18 +218,16 @@ public class CartService {
     }
 
     /**
-     * Validates the cart and returns any validation issues.
+     * Validates the current user's cart and returns any validation issues.
      *
-     * @param userId the ID of the user
      * @return the validated cart response
-     * @throws ResourceNotFoundException if the user is not found
+     * @throws IllegalStateException if no user is authenticated
      */
     @Transactional(readOnly = true)
-    public CartResponse validateCart(final Long userId) {
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
+    public CartResponse validateCart() {
+        User currentUser = SecurityUtils.getCurrentUser();
 
-        Cart cart = cartRepository.findByUser(user).orElse(new Cart(user));
+        Cart cart = cartRepository.findByUser(currentUser).orElse(new Cart(currentUser));
 
         // No need to validate each item in the cart here
         // The validation will be done in the mapToCartItemResponse method

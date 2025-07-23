@@ -1,5 +1,6 @@
 package com.horseriding.ecommerce.users;
 
+import com.horseriding.ecommerce.auth.SecurityUtils;
 import com.horseriding.ecommerce.auth.TokenService;
 import com.horseriding.ecommerce.auth.dtos.responses.AuthResponse;
 import com.horseriding.ecommerce.exception.AccessDeniedException;
@@ -99,61 +100,47 @@ public class UserService {
     }
 
     /**
-     * Gets a user profile by ID.
+     * Gets the current user's profile.
      *
-     * @param userId the user ID
      * @return the user profile
-     * @throws ResourceNotFoundException if user is not found
+     * @throws IllegalStateException if no user is authenticated
      */
-    public UserProfileResponse getUserProfile(final Long userId) {
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
-
-        return mapToUserProfileResponse(user);
+    public UserProfileResponse getCurrentUserProfile() {
+        User currentUser = SecurityUtils.getCurrentUser();
+        return mapToUserProfileResponse(currentUser);
     }
 
     /**
-     * Updates a user profile.
+     * Updates the current user's profile.
      *
-     * @param userId the user ID
      * @param request the update request
      * @return the updated user profile
-     * @throws ResourceNotFoundException if user is not found
+     * @throws IllegalStateException if no user is authenticated
      */
     @Transactional
-    public UserProfileResponse updateUserProfile(final Long userId, final UserUpdateRequest request) {
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
+    public UserProfileResponse updateCurrentUserProfile(final UserUpdateRequest request) {
+        User currentUser = SecurityUtils.getCurrentUser();
 
         // Update user fields
-        user.setFirstName(request.getFirstName());
-        user.setLastName(request.getLastName());
-        user.setPhoneNumber(request.getPhoneNumber());
+        currentUser.setFirstName(request.getFirstName());
+        currentUser.setLastName(request.getLastName());
+        currentUser.setPhoneNumber(request.getPhoneNumber());
 
         // Save updated user
-        User updatedUser = userRepository.save(user);
+        User updatedUser = userRepository.save(currentUser);
 
         return mapToUserProfileResponse(updatedUser);
     }
 
     /**
-     * Creates a new admin user (superadmin only).
+     * Creates a new admin user.
      *
-     * @param currentUserId the ID of the user making the request
      * @param request the user registration request
      * @return the created admin user
-     * @throws AccessDeniedException if the current user is not a superadmin
+     * @throws IllegalArgumentException if email is already in use
      */
     @Transactional
-    public UserResponse createAdminUser(final Long currentUserId, final UserRegistrationRequest request) {
-        // Check if current user is a superadmin
-        User currentUser = userRepository.findById(currentUserId)
-                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
-
-        if (!currentUser.isSuperAdmin()) {
-            throw new AccessDeniedException("Only superadmins can create admin users");
-        }
-
+    public UserResponse createAdminUser(final UserRegistrationRequest request) {
         // Check if email is already in use
         if (userRepository.existsByEmail(request.getEmail())) {
             throw new IllegalArgumentException("Email is already in use");
@@ -177,21 +164,11 @@ public class UserService {
     }
 
     /**
-     * Gets all admin users (superadmin only).
+     * Gets all admin users.
      *
-     * @param currentUserId the ID of the user making the request
      * @return list of admin users
-     * @throws AccessDeniedException if the current user is not a superadmin
      */
-    public List<UserResponse> getAllAdminUsers(final Long currentUserId) {
-        // Check if current user is a superadmin
-        User currentUser = userRepository.findById(currentUserId)
-                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
-
-        if (!currentUser.isSuperAdmin()) {
-            throw new AccessDeniedException("Only superadmins can view admin users");
-        }
-
+    public List<UserResponse> getAllAdminUsers() {
         // Get all admin users
         List<User> adminUsers = userRepository.findAll().stream()
                 .filter(user -> user.isAdmin() || user.isSuperAdmin())
@@ -204,23 +181,14 @@ public class UserService {
     }
 
     /**
-     * Deletes an admin user (superadmin only).
+     * Deletes an admin user.
      *
-     * @param currentUserId the ID of the user making the request
      * @param adminUserId the ID of the admin user to delete
-     * @throws AccessDeniedException if the current user is not a superadmin
-     * @throws IllegalArgumentException if trying to delete a superadmin
+     * @throws ResourceNotFoundException if the admin user is not found
+     * @throws IllegalArgumentException if trying to delete a superadmin or non-admin user
      */
     @Transactional
-    public void deleteAdminUser(final Long currentUserId, final Long adminUserId) {
-        // Check if current user is a superadmin
-        User currentUser = userRepository.findById(currentUserId)
-                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
-
-        if (!currentUser.isSuperAdmin()) {
-            throw new AccessDeniedException("Only superadmins can delete admin users");
-        }
-
+    public void deleteAdminUser(final Long adminUserId) {
         // Get admin user to delete
         User adminUser = userRepository.findById(adminUserId)
                 .orElseThrow(() -> new ResourceNotFoundException("Admin user not found"));
@@ -240,25 +208,17 @@ public class UserService {
     }
 
     /**
-     * Updates an admin user's role (superadmin only).
+     * Updates an admin user's role.
      *
-     * @param currentUserId the ID of the user making the request
      * @param adminUserId the ID of the admin user to update
      * @param newRole the new role for the admin user
      * @return the updated admin user
-     * @throws AccessDeniedException if the current user is not a superadmin
+     * @throws ResourceNotFoundException if the admin user is not found
      * @throws IllegalArgumentException if trying to update a superadmin or set an invalid role
      */
     @Transactional
-    public UserResponse updateAdminUserRole(
-            final Long currentUserId, final Long adminUserId, final UserRole newRole) {
-        // Check if current user is a superadmin
-        User currentUser = userRepository.findById(currentUserId)
-                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
-
-        if (!currentUser.isSuperAdmin()) {
-            throw new AccessDeniedException("Only superadmins can update admin roles");
-        }
+    public UserResponse updateAdminUserRole(final Long adminUserId, final UserRole newRole) {
+        User currentUser = SecurityUtils.getCurrentUser();
 
         // Get admin user to update
         User adminUser = userRepository.findById(adminUserId)
@@ -283,24 +243,13 @@ public class UserService {
     }
 
     /**
-     * Searches for users with pagination (admin only).
+     * Searches for users with pagination.
      *
-     * @param currentUserId the ID of the user making the request
      * @param searchTerm the search term
      * @param pageable pagination information
      * @return page of users matching the search criteria
-     * @throws AccessDeniedException if the current user is not an admin or superadmin
      */
-    public Page<UserResponse> searchUsers(
-            final Long currentUserId, final String searchTerm, final Pageable pageable) {
-        // Check if current user is an admin or superadmin
-        User currentUser = userRepository.findById(currentUserId)
-                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
-
-        if (!currentUser.hasAdminPrivileges()) {
-            throw new AccessDeniedException("Only admins can search users");
-        }
-
+    public Page<UserResponse> searchUsers(final String searchTerm, final Pageable pageable) {
         // Search users
         Page<User> users = userRepository.searchUsers(searchTerm, pageable);
 

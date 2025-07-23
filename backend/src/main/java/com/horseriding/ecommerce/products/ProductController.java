@@ -17,6 +17,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -36,7 +37,7 @@ import org.springframework.web.multipart.MultipartFile;
 @RestController
 @RequestMapping("/api/products")
 @RequiredArgsConstructor
-public final class ProductController {
+public class ProductController {
 
     /** Product service for product management operations. */
     private final ProductService productService;
@@ -44,46 +45,43 @@ public final class ProductController {
     /**
      * Creates a new product (admin only).
      *
-     * @param currentUserId the ID of the user making the request (placeholder for authenticated user)
      * @param request the product creation request
      * @return the created product
      */
     @PostMapping
-    public ResponseEntity<ProductDetailResponse> createProduct(
-            @RequestParam Long currentUserId, @Valid @RequestBody ProductCreateRequest request) {
-        ProductDetailResponse product = productService.createProduct(currentUserId, request);
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<ProductDetailResponse> createProduct(@Valid @RequestBody ProductCreateRequest request) {
+        ProductDetailResponse product = productService.createProduct(request);
         return new ResponseEntity<>(product, HttpStatus.CREATED);
     }
 
     /**
      * Updates an existing product (admin only).
      *
-     * @param currentUserId the ID of the user making the request (placeholder for authenticated user)
      * @param productId the ID of the product to update
      * @param request the product update request
      * @return the updated product
      */
     @PutMapping("/{productId}")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<ProductDetailResponse> updateProduct(
-            @RequestParam Long currentUserId,
             @PathVariable Long productId,
             @Valid @RequestBody ProductUpdateRequest request) {
-        ProductDetailResponse product = productService.updateProduct(currentUserId, productId, request);
+        ProductDetailResponse product = productService.updateProduct(productId, request);
         return ResponseEntity.ok(product);
     }
 
     /**
      * Deletes a product (admin only).
      *
-     * @param currentUserId the ID of the user making the request (placeholder for authenticated user)
      * @param productId the ID of the product to delete
      * @return success response
      */
     @DeleteMapping("/{productId}")
-    public ResponseEntity<SuccessResponse> deleteProduct(
-            @RequestParam Long currentUserId, @PathVariable Long productId) {
-        productService.deleteProduct(currentUserId, productId);
-        return ResponseEntity.ok(new SuccessResponse("Product deleted successfully", 200));
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<SuccessResponse<Void>> deleteProduct(@PathVariable Long productId) {
+        productService.deleteProduct(productId);
+        return ResponseEntity.ok(new SuccessResponse<>("Product deleted successfully", 200));
     }
 
     /**
@@ -251,24 +249,22 @@ public final class ProductController {
     /**
      * Updates product stock quantity (admin only).
      *
-     * @param currentUserId the ID of the user making the request (placeholder for authenticated user)
      * @param productId the ID of the product to update
      * @param quantity the new stock quantity
      * @return the updated product
      */
     @PutMapping("/{productId}/stock")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<ProductDetailResponse> updateProductStock(
-            @RequestParam Long currentUserId,
             @PathVariable Long productId,
             @RequestParam Integer quantity) {
-        ProductDetailResponse product = productService.updateProductStock(currentUserId, productId, quantity);
+        ProductDetailResponse product = productService.updateProductStock(productId, quantity);
         return ResponseEntity.ok(product);
     }
 
     /**
      * Gets all products with low stock (admin only).
      *
-     * @param currentUserId the ID of the user making the request (placeholder for authenticated user)
      * @param page the page number (0-based)
      * @param size the page size
      * @param sortBy the field to sort by
@@ -276,8 +272,8 @@ public final class ProductController {
      * @return page of products with low stock
      */
     @GetMapping("/low-stock")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<PaginationResponse<ProductResponse>> getLowStockProducts(
-            @RequestParam Long currentUserId,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
             @RequestParam(defaultValue = "stockQuantity") String sortBy,
@@ -286,7 +282,7 @@ public final class ProductController {
         Sort.Direction direction = sortDir.equalsIgnoreCase("desc") ? Sort.Direction.DESC : Sort.Direction.ASC;
         Pageable pageable = PageRequest.of(page, size, Sort.by(direction, sortBy));
         
-        Page<ProductResponse> productsPage = productService.getLowStockProducts(currentUserId, pageable);
+        Page<ProductResponse> productsPage = productService.getLowStockProducts(pageable);
         
         PaginationResponse<ProductResponse> response = new PaginationResponse<>(
                 productsPage.getContent(),
@@ -303,7 +299,6 @@ public final class ProductController {
     /**
      * Gets all out of stock products (admin only).
      *
-     * @param currentUserId the ID of the user making the request (placeholder for authenticated user)
      * @param page the page number (0-based)
      * @param size the page size
      * @param sortBy the field to sort by
@@ -311,8 +306,8 @@ public final class ProductController {
      * @return page of out of stock products
      */
     @GetMapping("/out-of-stock")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<PaginationResponse<ProductResponse>> getOutOfStockProducts(
-            @RequestParam Long currentUserId,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
             @RequestParam(defaultValue = "id") String sortBy,
@@ -321,7 +316,7 @@ public final class ProductController {
         Sort.Direction direction = sortDir.equalsIgnoreCase("desc") ? Sort.Direction.DESC : Sort.Direction.ASC;
         Pageable pageable = PageRequest.of(page, size, Sort.by(direction, sortBy));
         
-        Page<ProductResponse> productsPage = productService.getOutOfStockProducts(currentUserId, pageable);
+        Page<ProductResponse> productsPage = productService.getOutOfStockProducts(pageable);
         
         PaginationResponse<ProductResponse> response = new PaginationResponse<>(
                 productsPage.getContent(),
@@ -338,35 +333,33 @@ public final class ProductController {
     /**
      * Uploads a product image (admin only).
      *
-     * @param currentUserId the ID of the user making the request (placeholder for authenticated user)
      * @param productId the ID of the product
      * @param file the image file to upload
      * @return the URL of the uploaded image
      * @throws IOException if an I/O error occurs
      */
     @PostMapping(value = "/{productId}/images", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<String> uploadProductImage(
-            @RequestParam Long currentUserId,
             @PathVariable Long productId,
             @RequestPart("file") MultipartFile file) throws IOException {
-        String imageUrl = productService.uploadProductImage(currentUserId, productId, file);
+        String imageUrl = productService.uploadProductImage(productId, file);
         return ResponseEntity.ok(imageUrl);
     }
 
     /**
      * Removes a product image (admin only).
      *
-     * @param currentUserId the ID of the user making the request (placeholder for authenticated user)
      * @param productId the ID of the product
      * @param imageUrl the URL of the image to remove
      * @return success response
      */
     @DeleteMapping("/{productId}/images")
-    public ResponseEntity<SuccessResponse> removeProductImage(
-            @RequestParam Long currentUserId,
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<SuccessResponse<Void>> removeProductImage(
             @PathVariable Long productId,
             @RequestParam String imageUrl) {
-        productService.removeProductImage(currentUserId, productId, imageUrl);
-        return ResponseEntity.ok(new SuccessResponse("Image removed successfully", 200));
+        productService.removeProductImage(productId, imageUrl);
+        return ResponseEntity.ok(new SuccessResponse<>("Image removed successfully", 200));
     }
 }

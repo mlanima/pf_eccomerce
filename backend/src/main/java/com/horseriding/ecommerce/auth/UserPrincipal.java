@@ -1,13 +1,17 @@
 package com.horseriding.ecommerce.auth;
 
 import com.horseriding.ecommerce.users.User;
+import com.horseriding.ecommerce.users.UserRole;
+import lombok.EqualsAndHashCode;
 import lombok.RequiredArgsConstructor;
+import lombok.ToString;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
+import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
+import java.util.List;
 
 /**
  * UserPrincipal class that wraps the User entity and implements UserDetails.
@@ -15,8 +19,11 @@ import java.util.Collections;
  * It provides a clean separation between the domain model (User) and security concerns.
  */
 @RequiredArgsConstructor
+@EqualsAndHashCode(onlyExplicitlyIncluded = true)
+@ToString(exclude = "user")
 public class UserPrincipal implements UserDetails {
 
+    @EqualsAndHashCode.Include
     private final User user;
 
     /**
@@ -66,6 +73,15 @@ public class UserPrincipal implements UserDetails {
     }
 
     /**
+     * Gets the user's role.
+     *
+     * @return the user's role
+     */
+    public UserRole getRole() {
+        return user.getRole();
+    }
+
+    /**
      * Checks if the user has administrative privileges.
      *
      * @return true if the user has admin privileges, false otherwise
@@ -83,18 +99,52 @@ public class UserPrincipal implements UserDetails {
         return user.isSuperAdmin();
     }
 
+    /**
+     * Checks if the user is a customer.
+     *
+     * @return true if the user is a customer, false otherwise
+     */
+    public boolean isCustomer() {
+        return user.isCustomer();
+    }
+
+    /**
+     * Checks if the user is the owner of the specified resource.
+     *
+     * @param resourceUserId the user ID associated with the resource
+     * @return true if the user is the owner, false otherwise
+     */
+    public boolean isResourceOwner(Long resourceUserId) {
+        return user.getId().equals(resourceUserId);
+    }
+
     // UserDetails interface implementation
 
     /**
      * Returns the authorities granted to the user based on their role.
+     * Implements role hierarchy: SUPERADMIN > ADMIN > CUSTOMER
      *
      * @return collection of granted authorities
      */
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        return Collections.singletonList(
-            new SimpleGrantedAuthority("ROLE_" + user.getRole().name())
-        );
+        List<GrantedAuthority> authorities = new ArrayList<>();
+        
+        // Add base role
+        authorities.add(new SimpleGrantedAuthority("ROLE_" + user.getRole().name()));
+        
+        // Implement role hierarchy
+        if (user.getRole() == UserRole.SUPERADMIN) {
+            // SUPERADMIN also has ADMIN role
+            authorities.add(new SimpleGrantedAuthority("ROLE_ADMIN"));
+            // All roles have CUSTOMER role
+            authorities.add(new SimpleGrantedAuthority("ROLE_CUSTOMER"));
+        } else if (user.getRole() == UserRole.ADMIN) {
+            // ADMIN also has CUSTOMER role
+            authorities.add(new SimpleGrantedAuthority("ROLE_CUSTOMER"));
+        }
+        
+        return authorities;
     }
 
     /**

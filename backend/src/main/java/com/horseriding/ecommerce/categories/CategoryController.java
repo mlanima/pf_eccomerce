@@ -15,6 +15,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -40,46 +41,43 @@ public class CategoryController {
     /**
      * Creates a new category (admin only).
      *
-     * @param currentUserId the ID of the user making the request (placeholder for authenticated user)
      * @param request the category creation request
      * @return the created category
      */
     @PostMapping
-    public ResponseEntity<CategoryResponse> createCategory(
-            @RequestParam Long currentUserId, @Valid @RequestBody CategoryCreateRequest request) {
-        CategoryResponse category = categoryService.createCategory(currentUserId, request);
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<CategoryResponse> createCategory(@Valid @RequestBody CategoryCreateRequest request) {
+        CategoryResponse category = categoryService.createCategory(request);
         return new ResponseEntity<>(category, HttpStatus.CREATED);
     }
 
     /**
      * Updates an existing category (admin only).
      *
-     * @param currentUserId the ID of the user making the request (placeholder for authenticated user)
      * @param categoryId the ID of the category to update
      * @param request the category update request
      * @return the updated category
      */
     @PutMapping("/{categoryId}")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<CategoryResponse> updateCategory(
-            @RequestParam Long currentUserId,
             @PathVariable Long categoryId,
             @Valid @RequestBody CategoryUpdateRequest request) {
-        CategoryResponse category = categoryService.updateCategory(currentUserId, categoryId, request);
+        CategoryResponse category = categoryService.updateCategory(categoryId, request);
         return ResponseEntity.ok(category);
     }
 
     /**
      * Deletes a category (admin only).
      *
-     * @param currentUserId the ID of the user making the request (placeholder for authenticated user)
      * @param categoryId the ID of the category to delete
      * @return success response
      */
     @DeleteMapping("/{categoryId}")
-    public ResponseEntity<SuccessResponse> deleteCategory(
-            @RequestParam Long currentUserId, @PathVariable Long categoryId) {
-        categoryService.deleteCategory(currentUserId, categoryId);
-        return ResponseEntity.ok(new SuccessResponse("Category deleted successfully", 200));
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<SuccessResponse<Void>> deleteCategory(@PathVariable Long categoryId) {
+        categoryService.deleteCategory(categoryId);
+        return ResponseEntity.ok(new SuccessResponse<>("Category deleted successfully", 200));
     }
 
     /**

@@ -19,13 +19,14 @@ spring:
 
 server:
   port: 8080
-  servlet:
-    context-path: /api
 
 # JWT Configuration
 jwt:
-  secret: ${JWT_SECRET:default-secret-key-change-in-production}
-  expiration: ${JWT_EXPIRATION:86400000}
+  secret: ${JWT_SECRET:defaultSecretKeyForDevelopmentEnvironmentOnlyMustBeAtLeast256Bits}
+  access-token:
+    expiration: ${JWT_ACCESS_TOKEN_EXPIRATION:900000}
+  refresh-token:
+    expiration: ${JWT_REFRESH_TOKEN_EXPIRATION:604800000}
 
 # PayPal Configuration
 paypal:

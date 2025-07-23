@@ -7,9 +7,11 @@ import jakarta.validation.ConstraintViolationException;
 import java.util.HashMap;
 import java.util.Map;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.BindException;
+import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -20,6 +22,7 @@ import org.springframework.web.context.request.WebRequest;
  */
 @ControllerAdvice
 @RequiredArgsConstructor
+@Slf4j
 public final class GlobalExceptionHandler {
 
     /** Response mapper for creating error responses. */
@@ -141,6 +144,8 @@ public final class GlobalExceptionHandler {
     public ResponseEntity<ApiErrorResponse> handleRuntimeException(
             final RuntimeException ex, final WebRequest request) {
 
+        log.error("Unhandled exception at {}: {}", request.getDescription(false), ex.getMessage(), ex);
+
         ApiErrorResponse errorResponse =
                 responseMapper.toErrorResponse(
                         "Internal Server Error",
@@ -236,6 +241,31 @@ public final class GlobalExceptionHandler {
     }
 
     /**
+     * Handle HTTP method not supported exceptions.
+     *
+     * @param ex the exception
+     * @param request the web request
+     * @return API error response
+     */
+    @ExceptionHandler(HttpRequestMethodNotSupportedException.class)
+    public ResponseEntity<ApiErrorResponse> handleHttpRequestMethodNotSupported(
+            final HttpRequestMethodNotSupportedException ex, final WebRequest request) {
+
+        String supportedMethods = String.join(", ", ex.getSupportedMethods());
+        String message = String.format("Request method '%s' not supported. Supported methods are: %s", 
+                ex.getMethod(), supportedMethods);
+
+        ApiErrorResponse errorResponse =
+                responseMapper.toErrorResponse(
+                        "Method Not Allowed",
+                        message,
+                        HttpStatus.METHOD_NOT_ALLOWED,
+                        request.getDescription(false));
+
+        return new ResponseEntity<>(errorResponse, HttpStatus.METHOD_NOT_ALLOWED);
+    }
+
+    /**
      * Handle illegal state exceptions (often thrown by SecurityUtils).
      *
      * @param ex the exception
@@ -279,6 +309,8 @@ public final class GlobalExceptionHandler {
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ApiErrorResponse> handleGenericException(
             final Exception ex, final WebRequest request) {
+
+        log.error("Unhandled exception at {}: {}", request.getDescription(false), ex.getMessage(), ex);
 
         ApiErrorResponse errorResponse =
                 responseMapper.toErrorResponse(

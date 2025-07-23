@@ -62,7 +62,8 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                         UserDetails userDetails = userDetailsService.loadUserByUsername(username);
 
                         // Validate token against user
-                        if (jwtTokenProvider.validateAccessToken(jwt, (User) userDetails)) {
+                        if (userDetails instanceof UserPrincipal && 
+                            jwtTokenProvider.validateAccessToken(jwt, ((UserPrincipal) userDetails).getUser())) {
                             // Create authentication token
                             UsernamePasswordAuthenticationToken authentication =
                                     new UsernamePasswordAuthenticationToken(
@@ -98,20 +99,6 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     }
 
     /**
-     * Extracts JWT token from the Authorization header.
-     *
-     * @param request the HTTP request
-     * @return the JWT token or null if not found
-     */
-    private String getJwtFromRequest(HttpServletRequest request) {
-        String bearerToken = request.getHeader("Authorization");
-        if (StringUtils.hasText(bearerToken) && bearerToken.startsWith("Bearer ")) {
-            return bearerToken.substring(7);
-        }
-        return null;
-    }
-
-    /**
      * Determines if this filter should be applied to the given request.
      * Skip authentication for public endpoints.
      *
@@ -130,5 +117,19 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                path.startsWith("/v3/api-docs/") ||
                path.equals("/favicon.ico") ||
                path.equals("/error");
+    }
+
+    /**
+     * Extracts JWT token from the Authorization header.
+     *
+     * @param request the HTTP request
+     * @return the JWT token or null if not found
+     */
+    private String getJwtFromRequest(HttpServletRequest request) {
+        String bearerToken = request.getHeader("Authorization");
+        if (StringUtils.hasText(bearerToken) && bearerToken.startsWith("Bearer ")) {
+            return bearerToken.substring(7);
+        }
+        return null;
     }
 }

@@ -1,5 +1,6 @@
 package com.horseriding.ecommerce.orders;
 
+import com.horseriding.ecommerce.auth.SecurityUtils;
 import com.horseriding.ecommerce.cart.Cart;
 import com.horseriding.ecommerce.cart.CartItem;
 import com.horseriding.ecommerce.cart.CartRepository;
@@ -73,18 +74,17 @@ public class OrderService {
     // private final EmailService emailService; // Would be injected in a real application
 
     /**
-     * Creates a new order from cart.
+     * Creates a new order from cart for the current user.
      *
-     * @param userId the ID of the user
      * @param request the order creation request
      * @return the created order
-     * @throws ResourceNotFoundException if the user or product is not found
+     * @throws IllegalStateException if no user is authenticated
+     * @throws ResourceNotFoundException if the product is not found
      * @throws IllegalArgumentException if the cart is empty or contains invalid items
      */
     @Transactional
-    public OrderResponse createOrder(final Long userId, final OrderCreateRequest request) {
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
+    public OrderResponse createOrder(final OrderCreateRequest request) {
+        User currentUser = SecurityUtils.getCurrentUser();
 
         // Validate order items
         if (request.getItems() == null || request.getItems().isEmpty()) {
@@ -92,7 +92,7 @@ public class OrderService {
         }
 
         // Create new order
-        Order order = new Order(user, request.getTotalAmount());
+        Order order = new Order(currentUser, request.getTotalAmount());
         order.setSubtotalAmount(request.getSubtotalAmount());
         order.setShippingAmount(request.getShippingAmount());
         order.setTaxAmount(request.getTaxAmount());
@@ -152,7 +152,7 @@ public class OrderService {
         Order finalOrder = orderRepository.save(savedOrder);
 
         // Clear user's cart after successful order creation
-        Cart cart = cartRepository.findByUser(user).orElse(null);
+        Cart cart = cartRepository.findByUser(currentUser).orElse(null);
         if (cart != null) {
             cart.clearCart();
             cartRepository.save(cart);
@@ -165,28 +165,26 @@ public class OrderService {
     }
 
     /**
-     * Creates a new order directly from the user's cart.
+     * Creates a new order directly from the current user's cart.
      *
-     * @param userId the ID of the user
      * @param shippingDetails the shipping details for the order
      * @param paypalPaymentId the PayPal payment ID
      * @param paypalPayerId the PayPal payer ID
      * @param paypalOrderId the PayPal order ID
      * @return the created order
-     * @throws ResourceNotFoundException if the user or cart is not found
+     * @throws IllegalStateException if no user is authenticated
+     * @throws ResourceNotFoundException if the cart is not found
      * @throws IllegalArgumentException if the cart is empty or contains invalid items
      */
     @Transactional
     public OrderResponse createOrderFromCart(
-            final Long userId,
             final ShippingDetails shippingDetails,
             final String paypalPaymentId,
             final String paypalPayerId,
             final String paypalOrderId) {
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
+        User currentUser = SecurityUtils.getCurrentUser();
 
-        Cart cart = cartRepository.findByUser(user)
+        Cart cart = cartRepository.findByUser(currentUser)
                 .orElseThrow(() -> new ResourceNotFoundException("Cart not found"));
 
         // Validate cart
@@ -216,7 +214,7 @@ public class OrderService {
         BigDecimal total = subtotal.add(shipping).add(tax);
 
         // Create new order
-        Order order = new Order(user, total);
+        Order order = new Order(currentUser, total);
         order.setSubtotalAmount(subtotal);
         order.setShippingAmount(shipping);
         order.setTaxAmount(tax);
@@ -309,26 +307,15 @@ public class OrderService {
     }
 
     /**
-     * Updates an order's status (admin only).
+     * Updates an order's status.
      *
-     * @param currentUserId the ID of the user making the request
      * @param orderId the ID of the order to update
      * @param request the order update request
      * @return the updated order
-     * @throws AccessDeniedException if the current user is not an admin
      * @throws ResourceNotFoundException if the order is not found
      */
     @Transactional
-    public OrderResponse updateOrderStatus(
-            final Long currentUserId, final Long orderId, final OrderUpdateRequest request) {
-        // Check if current user is an admin
-        User currentUser = userRepository.findById(currentUserId)
-                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
-
-        if (!currentUser.hasAdminPrivileges()) {
-            throw new AccessDeniedException("Only admins can update order status");
-        }
-
+    public OrderResponse updateOrderStatus(final Long orderId, final OrderUpdateRequest request) {
         // Get order to update
         Order order = orderRepository.findById(orderId)
                 .orElseThrow(() -> new ResourceNotFoundException("Order not found"));
@@ -380,90 +367,66 @@ public class OrderService {
     }
 
     /**
-     * Gets all orders for a user with pagination.
+     * Gets all orders for the current user with pagination.
      *
-     * @param userId the ID of the user
      * @param pageable pagination information
      * @return page of orders for the user
-     * @throws ResourceNotFoundException if the user is not found
+     * @throws IllegalStateException if no user is authenticated
      */
     @Transactional(readOnly = true)
-    public Page<OrderHistoryResponse> getUserOrders(final Long userId, final Pageable pageable) {
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
+    public Page<OrderHistoryResponse> getCurrentUserOrders(final Pageable pageable) {
+        User currentUser = SecurityUtils.getCurrentUser();
 
-        Page<Order> orders = orderRepository.findByUserOrderByCreatedAtDesc(user, pageable);
+        Page<Order> orders = orderRepository.findByUserOrderByCreatedAtDesc(currentUser, pageable);
 
         return orders.map(this::mapToOrderHistoryResponse);
     }
 
     /**
-     * Gets all orders with pagination (admin only).
+     * Gets all orders with pagination.
      *
-     * @param currentUserId the ID of the user making the request
      * @param pageable pagination information
      * @return page of all orders
-     * @throws AccessDeniedException if the current user is not an admin
      */
     @Transactional(readOnly = true)
-    public Page<OrderResponse> getAllOrders(final Long currentUserId, final Pageable pageable) {
-        // Check if current user is an admin
-        User currentUser = userRepository.findById(currentUserId)
-                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
-
-        if (!currentUser.hasAdminPrivileges()) {
-            throw new AccessDeniedException("Only admins can view all orders");
-        }
-
+    public Page<OrderResponse> getAllOrders(final Pageable pageable) {
         Page<Order> orders = orderRepository.findAll(pageable);
 
         return orders.map(this::mapToOrderResponse);
     }
 
     /**
-     * Searches for orders (admin only).
+     * Searches for orders.
      *
-     * @param currentUserId the ID of the user making the request
      * @param searchTerm the search term
      * @param pageable pagination information
      * @return page of orders matching the search criteria
-     * @throws AccessDeniedException if the current user is not an admin
      */
     @Transactional(readOnly = true)
-    public Page<OrderResponse> searchOrders(
-            final Long currentUserId, final String searchTerm, final Pageable pageable) {
-        // Check if current user is an admin
-        User currentUser = userRepository.findById(currentUserId)
-                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
-
-        if (!currentUser.hasAdminPrivileges()) {
-            throw new AccessDeniedException("Only admins can search orders");
-        }
-
+    public Page<OrderResponse> searchOrders(final String searchTerm, final Pageable pageable) {
         Page<Order> orders = orderRepository.searchOrders(searchTerm, pageable);
 
         return orders.map(this::mapToOrderResponse);
     }
 
     /**
-     * Cancels an order.
+     * Cancels an order for the current user.
      *
-     * @param userId the ID of the user
      * @param orderId the ID of the order to cancel
      * @return the cancelled order
+     * @throws IllegalStateException if no user is authenticated
      * @throws ResourceNotFoundException if the order is not found
      * @throws IllegalArgumentException if the order cannot be cancelled
      */
     @Transactional
-    public OrderResponse cancelOrder(final Long userId, final Long orderId) {
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
+    public OrderResponse cancelOrder(final Long orderId) {
+        User currentUser = SecurityUtils.getCurrentUser();
 
         Order order = orderRepository.findById(orderId)
                 .orElseThrow(() -> new ResourceNotFoundException("Order not found"));
 
-        // Check if order belongs to user
-        if (!order.getUser().getId().equals(userId)) {
+        // Check if order belongs to current user
+        if (!order.getUser().getId().equals(currentUser.getId())) {
             throw new AccessDeniedException("You do not have permission to cancel this order");
         }
 

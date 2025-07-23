@@ -1,6 +1,8 @@
 package com.horseriding.ecommerce.auth;
 
 import com.horseriding.ecommerce.users.User;
+import com.horseriding.ecommerce.users.UserRole;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -9,6 +11,7 @@ import org.springframework.security.core.userdetails.UserDetails;
  * Utility class for Spring Security operations.
  * Provides helper methods to get current authenticated user information.
  */
+@Slf4j
 public final class SecurityUtils {
 
     private SecurityUtils() {
@@ -25,6 +28,7 @@ public final class SecurityUtils {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         
         if (authentication == null || !authentication.isAuthenticated()) {
+            log.warn("Attempted to get current user when no user is authenticated");
             throw new IllegalStateException("No authenticated user found");
         }
 
@@ -40,9 +44,11 @@ public final class SecurityUtils {
         }
         
         if (principal instanceof UserDetails) {
+            log.error("UserDetails principal is not of expected type UserPrincipal: {}", principal.getClass().getName());
             throw new IllegalStateException("UserDetails principal is not of expected type UserPrincipal");
         }
         
+        log.error("Unexpected principal type: {}", principal.getClass().getName());
         throw new IllegalStateException("Unexpected principal type: " + principal.getClass().getName());
     }
 
@@ -56,6 +62,7 @@ public final class SecurityUtils {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         
         if (authentication == null || !authentication.isAuthenticated()) {
+            log.warn("Attempted to get current UserPrincipal when no user is authenticated");
             throw new IllegalStateException("No authenticated user found");
         }
 
@@ -65,6 +72,7 @@ public final class SecurityUtils {
             return (UserPrincipal) principal;
         }
         
+        log.error("Principal is not of type UserPrincipal: {}", principal.getClass().getName());
         throw new IllegalStateException("Principal is not of type UserPrincipal: " + principal.getClass().getName());
     }
 
@@ -86,6 +94,16 @@ public final class SecurityUtils {
      */
     public static String getCurrentUserEmail() {
         return getCurrentUser().getEmail();
+    }
+
+    /**
+     * Gets the current authenticated user's role.
+     *
+     * @return the current user's role
+     * @throws IllegalStateException if no user is authenticated
+     */
+    public static UserRole getCurrentUserRole() {
+        return getCurrentUser().getRole();
     }
 
     /**
@@ -132,5 +150,25 @@ public final class SecurityUtils {
      */
     public static boolean hasSuperAdminPrivileges() {
         return hasRole("SUPERADMIN");
+    }
+    
+    /**
+     * Checks if the current user is the owner of the specified resource.
+     *
+     * @param resourceUserId the user ID associated with the resource
+     * @return true if the current user is the owner, false otherwise
+     */
+    public static boolean isResourceOwner(Long resourceUserId) {
+        if (!isAuthenticated()) {
+            return false;
+        }
+        
+        try {
+            Long currentUserId = getCurrentUserId();
+            return currentUserId.equals(resourceUserId);
+        } catch (Exception e) {
+            log.error("Error checking resource ownership", e);
+            return false;
+        }
     }
 }
