@@ -18,7 +18,6 @@ import com.horseriding.ecommerce.products.ProductService;
 import com.horseriding.ecommerce.users.User;
 import com.horseriding.ecommerce.users.UserRepository;
 import java.math.BigDecimal;
-import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -124,8 +123,10 @@ public class OrderService {
 
         // Add order items
         for (OrderCreateRequest.OrderItemCreateRequest itemRequest : request.getItems()) {
-            Product product = productRepository.findById(itemRequest.getProductId())
-                    .orElseThrow(() -> new ResourceNotFoundException("Product not found"));
+            Product product =
+                    productRepository
+                            .findById(itemRequest.getProductId())
+                            .orElseThrow(() -> new ResourceNotFoundException("Product not found"));
 
             // Check if product is in stock
             if (!product.isInStock()) {
@@ -135,12 +136,17 @@ public class OrderService {
             // Check if requested quantity is available
             if (product.getStockQuantity() < itemRequest.getQuantity()) {
                 throw new IllegalArgumentException(
-                        "Requested quantity exceeds available stock for product: " + product.getName());
+                        "Requested quantity exceeds available stock for product: "
+                                + product.getName());
             }
 
             // Create order item
-            OrderItem orderItem = new OrderItem(
-                    savedOrder, product, itemRequest.getQuantity(), itemRequest.getUnitPrice());
+            OrderItem orderItem =
+                    new OrderItem(
+                            savedOrder,
+                            product,
+                            itemRequest.getQuantity(),
+                            itemRequest.getUnitPrice());
             savedOrder.addItem(orderItem);
 
             // Update product stock
@@ -184,8 +190,10 @@ public class OrderService {
             final String paypalOrderId) {
         User currentUser = SecurityUtils.getCurrentUser();
 
-        Cart cart = cartRepository.findByUser(currentUser)
-                .orElseThrow(() -> new ResourceNotFoundException("Cart not found"));
+        Cart cart =
+                cartRepository
+                        .findByUser(currentUser)
+                        .orElseThrow(() -> new ResourceNotFoundException("Cart not found"));
 
         // Validate cart
         if (cart.isEmpty()) {
@@ -203,14 +211,20 @@ public class OrderService {
             }
             if (product.getStockQuantity() < item.getQuantity()) {
                 throw new IllegalArgumentException(
-                        "Requested quantity exceeds available stock for product: " + product.getName());
+                        "Requested quantity exceeds available stock for product: "
+                                + product.getName());
             }
         }
 
         // Calculate totals
         BigDecimal subtotal = cart.getTotalAmount();
-        BigDecimal shipping = BigDecimal.ZERO; // In a real application, this would be calculated based on shipping method
-        BigDecimal tax = BigDecimal.ZERO; // In a real application, this would be calculated based on tax rules
+        BigDecimal shipping =
+                BigDecimal
+                        .ZERO; // In a real application, this would be calculated based on shipping
+        // method
+        BigDecimal tax =
+                BigDecimal
+                        .ZERO; // In a real application, this would be calculated based on tax rules
         BigDecimal total = subtotal.add(shipping).add(tax);
 
         // Create new order
@@ -241,10 +255,10 @@ public class OrderService {
         // Add order items from cart
         for (CartItem cartItem : cart.getItems()) {
             Product product = cartItem.getProduct();
-            
+
             // Create order item
-            OrderItem orderItem = new OrderItem(
-                    savedOrder, product, cartItem.getQuantity(), product.getPrice());
+            OrderItem orderItem =
+                    new OrderItem(savedOrder, product, cartItem.getQuantity(), product.getPrice());
             savedOrder.addItem(orderItem);
 
             // Update product stock
@@ -275,15 +289,18 @@ public class OrderService {
      */
     @Transactional
     public OrderResponse updatePaymentStatus(final String paypalPaymentId, final String status) {
-        Order order = orderRepository.findByPaypalPaymentId(paypalPaymentId)
-                .orElseThrow(() -> new ResourceNotFoundException("Order not found"));
+        Order order =
+                orderRepository
+                        .findByPaypalPaymentId(paypalPaymentId)
+                        .orElseThrow(() -> new ResourceNotFoundException("Order not found"));
 
         // Update order status based on PayPal payment status
         switch (status.toLowerCase()) {
             case "completed":
                 order.setStatus(OrderStatus.PAID);
                 // Send payment confirmation email
-                // emailService.sendPaymentConfirmation(order); // Would be called in a real application
+                // emailService.sendPaymentConfirmation(order); // Would be called in a real
+                // application
                 break;
             case "cancelled":
                 order.setStatus(OrderStatus.CANCELLED);
@@ -317,17 +334,21 @@ public class OrderService {
     @Transactional
     public OrderResponse updateOrderStatus(final Long orderId, final OrderUpdateRequest request) {
         // Get order to update
-        Order order = orderRepository.findById(orderId)
-                .orElseThrow(() -> new ResourceNotFoundException("Order not found"));
+        Order order =
+                orderRepository
+                        .findById(orderId)
+                        .orElseThrow(() -> new ResourceNotFoundException("Order not found"));
 
         // Update order status
         if (request.getStatus() != null) {
             // Handle stock restoration for cancelled or refunded orders
-            if ((request.getStatus() == OrderStatus.CANCELLED || request.getStatus() == OrderStatus.REFUNDED)
-                    && order.getStatus() != OrderStatus.CANCELLED && order.getStatus() != OrderStatus.REFUNDED) {
+            if ((request.getStatus() == OrderStatus.CANCELLED
+                            || request.getStatus() == OrderStatus.REFUNDED)
+                    && order.getStatus() != OrderStatus.CANCELLED
+                    && order.getStatus() != OrderStatus.REFUNDED) {
                 restoreProductStock(order);
             }
-            
+
             order.setStatus(request.getStatus());
         }
 
@@ -346,7 +367,8 @@ public class OrderService {
         Order updatedOrder = orderRepository.save(order);
 
         // Send order status update email
-        // emailService.sendOrderStatusUpdate(updatedOrder); // Would be called in a real application
+        // emailService.sendOrderStatusUpdate(updatedOrder); // Would be called in a real
+        // application
 
         return mapToOrderResponse(updatedOrder);
     }
@@ -360,8 +382,10 @@ public class OrderService {
      */
     @Transactional(readOnly = true)
     public OrderResponse getOrderById(final Long orderId) {
-        Order order = orderRepository.findById(orderId)
-                .orElseThrow(() -> new ResourceNotFoundException("Order not found"));
+        Order order =
+                orderRepository
+                        .findById(orderId)
+                        .orElseThrow(() -> new ResourceNotFoundException("Order not found"));
 
         return mapToOrderResponse(order);
     }
@@ -422,8 +446,10 @@ public class OrderService {
     public OrderResponse cancelOrder(final Long orderId) {
         User currentUser = SecurityUtils.getCurrentUser();
 
-        Order order = orderRepository.findById(orderId)
-                .orElseThrow(() -> new ResourceNotFoundException("Order not found"));
+        Order order =
+                orderRepository
+                        .findById(orderId)
+                        .orElseThrow(() -> new ResourceNotFoundException("Order not found"));
 
         // Check if order belongs to current user
         if (!order.getUser().getId().equals(currentUser.getId())) {
@@ -445,7 +471,8 @@ public class OrderService {
         Order cancelledOrder = orderRepository.save(order);
 
         // Send order cancellation email
-        // emailService.sendOrderCancellation(cancelledOrder); // Would be called in a real application
+        // emailService.sendOrderCancellation(cancelledOrder); // Would be called in a real
+        // application
 
         return mapToOrderResponse(cancelledOrder);
     }
@@ -458,8 +485,10 @@ public class OrderService {
      * @throws ResourceNotFoundException if the order is not found
      */
     public PayPalPaymentInfo initiatePayPalPayment(final Long orderId) {
-        Order order = orderRepository.findById(orderId)
-                .orElseThrow(() -> new ResourceNotFoundException("Order not found"));
+        Order order =
+                orderRepository
+                        .findById(orderId)
+                        .orElseThrow(() -> new ResourceNotFoundException("Order not found"));
 
         // In a real application, this would call the PayPal API to create a payment
         // For now, we'll just return the client ID for frontend integration
@@ -468,7 +497,7 @@ public class OrderService {
         paymentInfo.setOrderId(order.getId().toString());
         paymentInfo.setCurrency("USD");
         paymentInfo.setAmount(order.getTotalAmount());
-        
+
         return paymentInfo;
     }
 
@@ -488,8 +517,10 @@ public class OrderService {
             final String paypalPaymentId,
             final String paypalPayerId,
             final String paypalOrderId) {
-        Order order = orderRepository.findById(orderId)
-                .orElseThrow(() -> new ResourceNotFoundException("Order not found"));
+        Order order =
+                orderRepository
+                        .findById(orderId)
+                        .orElseThrow(() -> new ResourceNotFoundException("Order not found"));
 
         // In a real application, this would call the PayPal API to execute the payment
         // For now, we'll just update the order status and PayPal fields
@@ -539,7 +570,7 @@ public class OrderService {
         response.setUserId(order.getUser().getId());
         response.setUserEmail(order.getUser().getEmail());
         response.setUserFullName(order.getUser().getFullName());
-        
+
         // Map shipping address
         response.setShippingName(order.getShippingName());
         response.setShippingAddressLine1(order.getShippingAddressLine1());
@@ -549,41 +580,42 @@ public class OrderService {
         response.setShippingPostalCode(order.getShippingPostalCode());
         response.setShippingCountry(order.getShippingCountry());
         response.setShippingPhone(order.getShippingPhone());
-        
+
         // Map amounts
         response.setTotalAmount(order.getTotalAmount());
         response.setSubtotalAmount(order.getSubtotalAmount());
         response.setShippingAmount(order.getShippingAmount());
         response.setTaxAmount(order.getTaxAmount());
         response.setStatus(order.getStatus());
-        
+
         // Map PayPal fields
         response.setPaypalPaymentId(order.getPaypalPaymentId());
         response.setPaypalPayerId(order.getPaypalPayerId());
         response.setPaypalOrderId(order.getPaypalOrderId());
         response.setPaymentMethod(order.getPaymentMethod());
-        
+
         // Map tracking information
         response.setTrackingNumber(order.getTrackingNumber());
         response.setCarrier(order.getCarrier());
         response.setNotes(order.getNotes());
-        
+
         // Map timestamps
         response.setCreatedAt(order.getCreatedAt());
         response.setUpdatedAt(order.getUpdatedAt());
         response.setShippedAt(order.getShippedAt());
         response.setDeliveredAt(order.getDeliveredAt());
-        
+
         // Map order items
         if (order.getItems() != null) {
-            List<OrderItemResponse> itemResponses = order.getItems().stream()
-                    .map(this::mapToOrderItemResponse)
-                    .collect(Collectors.toList());
+            List<OrderItemResponse> itemResponses =
+                    order.getItems().stream()
+                            .map(this::mapToOrderItemResponse)
+                            .collect(Collectors.toList());
             response.setItems(itemResponses);
         } else {
             response.setItems(new ArrayList<>());
         }
-        
+
         return response;
     }
 
@@ -596,7 +628,8 @@ public class OrderService {
     private OrderItemResponse mapToOrderItemResponse(final OrderItem orderItem) {
         OrderItemResponse response = new OrderItemResponse();
         response.setId(orderItem.getId());
-        response.setProductId(orderItem.getProduct() != null ? orderItem.getProduct().getId() : null);
+        response.setProductId(
+                orderItem.getProduct() != null ? orderItem.getProduct().getId() : null);
         response.setQuantity(orderItem.getQuantity());
         response.setUnitPrice(orderItem.getUnitPrice());
         response.setTotalPrice(orderItem.getTotalPrice());
@@ -637,35 +670,35 @@ public class OrderService {
         private String orderId;
         private String currency;
         private BigDecimal amount;
-        
+
         public String getClientId() {
             return clientId;
         }
-        
+
         public void setClientId(String clientId) {
             this.clientId = clientId;
         }
-        
+
         public String getOrderId() {
             return orderId;
         }
-        
+
         public void setOrderId(String orderId) {
             this.orderId = orderId;
         }
-        
+
         public String getCurrency() {
             return currency;
         }
-        
+
         public void setCurrency(String currency) {
             this.currency = currency;
         }
-        
+
         public BigDecimal getAmount() {
             return amount;
         }
-        
+
         public void setAmount(BigDecimal amount) {
             this.amount = amount;
         }
@@ -683,67 +716,67 @@ public class OrderService {
         private String postalCode;
         private String country;
         private String phone;
-        
+
         public String getName() {
             return name;
         }
-        
+
         public void setName(String name) {
             this.name = name;
         }
-        
+
         public String getAddressLine1() {
             return addressLine1;
         }
-        
+
         public void setAddressLine1(String addressLine1) {
             this.addressLine1 = addressLine1;
         }
-        
+
         public String getAddressLine2() {
             return addressLine2;
         }
-        
+
         public void setAddressLine2(String addressLine2) {
             this.addressLine2 = addressLine2;
         }
-        
+
         public String getCity() {
             return city;
         }
-        
+
         public void setCity(String city) {
             this.city = city;
         }
-        
+
         public String getState() {
             return state;
         }
-        
+
         public void setState(String state) {
             this.state = state;
         }
-        
+
         public String getPostalCode() {
             return postalCode;
         }
-        
+
         public void setPostalCode(String postalCode) {
             this.postalCode = postalCode;
         }
-        
+
         public String getCountry() {
             return country;
         }
-        
+
         public void setCountry(String country) {
             this.country = country;
         }
-        
+
         public String getPhone() {
             return phone;
         }
-        
+
         public void setPhone(String phone) {
             this.phone = phone;
         }

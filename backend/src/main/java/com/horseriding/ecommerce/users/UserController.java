@@ -58,7 +58,8 @@ public class UserController {
      */
     @PutMapping("/users/profile")
     @PreAuthorize("isAuthenticated()")
-    public ResponseEntity<UserProfileResponse> updateUserProfile(@Valid @RequestBody UserUpdateRequest request) {
+    public ResponseEntity<UserProfileResponse> updateUserProfile(
+            @Valid @RequestBody UserUpdateRequest request) {
         UserProfileResponse profile = userService.updateCurrentUserProfile(request);
         return ResponseEntity.ok(profile);
     }
@@ -71,7 +72,8 @@ public class UserController {
      */
     @PostMapping("/admin/users")
     @PreAuthorize("hasRole('SUPERADMIN')")
-    public ResponseEntity<UserResponse> createAdminUser(@Valid @RequestBody UserRegistrationRequest request) {
+    public ResponseEntity<UserResponse> createAdminUser(
+            @Valid @RequestBody UserRegistrationRequest request) {
         UserResponse user = userService.createAdminUser(request);
         return new ResponseEntity<>(user, HttpStatus.CREATED);
     }
@@ -111,8 +113,7 @@ public class UserController {
     @PutMapping("/admin/users/{adminUserId}/role")
     @PreAuthorize("hasRole('SUPERADMIN')")
     public ResponseEntity<UserResponse> updateAdminUserRole(
-            @PathVariable Long adminUserId,
-            @RequestParam UserRole role) {
+            @PathVariable Long adminUserId, @RequestParam UserRole role) {
         UserResponse user = userService.updateAdminUserRole(adminUserId, role);
         return ResponseEntity.ok(user);
     }
@@ -135,21 +136,23 @@ public class UserController {
             @RequestParam(defaultValue = "10") int size,
             @RequestParam(defaultValue = "id") String sortBy,
             @RequestParam(defaultValue = "asc") String sortDir) {
-        
-        Sort.Direction direction = sortDir.equalsIgnoreCase("desc") ? Sort.Direction.DESC : Sort.Direction.ASC;
+
+        Sort.Direction direction =
+                sortDir.equalsIgnoreCase("desc") ? Sort.Direction.DESC : Sort.Direction.ASC;
         Pageable pageable = PageRequest.of(page, size, Sort.by(direction, sortBy));
-        
+
         Page<UserResponse> usersPage = userService.searchUsers(searchTerm, pageable);
-        
-        PaginationResponse<UserResponse> response = new PaginationResponse<>(
-                usersPage.getContent(),
-                usersPage.getNumber(),
-                usersPage.getSize(),
-                usersPage.getTotalElements(),
-                usersPage.getTotalPages(),
-                usersPage.isFirst(),
-                usersPage.isLast());
-        
+
+        PaginationResponse<UserResponse> response =
+                new PaginationResponse<>(
+                        usersPage.getContent(),
+                        usersPage.getNumber(),
+                        usersPage.getSize(),
+                        usersPage.getTotalElements(),
+                        usersPage.getTotalPages(),
+                        usersPage.isFirst(),
+                        usersPage.isLast());
+
         return ResponseEntity.ok(response);
     }
 }

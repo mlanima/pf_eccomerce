@@ -52,10 +52,13 @@ public class CartService {
     public Cart getOrCreateCart() {
         User currentUser = SecurityUtils.getCurrentUser();
 
-        return cartRepository.findByUser(currentUser).orElseGet(() -> {
-            Cart newCart = new Cart(currentUser);
-            return cartRepository.save(newCart);
-        });
+        return cartRepository
+                .findByUser(currentUser)
+                .orElseGet(
+                        () -> {
+                            Cart newCart = new Cart(currentUser);
+                            return cartRepository.save(newCart);
+                        });
     }
 
     /**
@@ -86,8 +89,10 @@ public class CartService {
     public CartResponse addToCart(final AddToCartRequest request) {
         User currentUser = SecurityUtils.getCurrentUser();
 
-        Product product = productRepository.findById(request.getProductId())
-                .orElseThrow(() -> new ResourceNotFoundException("Product not found"));
+        Product product =
+                productRepository
+                        .findById(request.getProductId())
+                        .orElseThrow(() -> new ResourceNotFoundException("Product not found"));
 
         // Check if product is in stock
         if (!product.isInStock()) {
@@ -101,10 +106,14 @@ public class CartService {
         }
 
         // Get or create cart
-        Cart cart = cartRepository.findByUser(currentUser).orElseGet(() -> {
-            Cart newCart = new Cart(currentUser);
-            return cartRepository.save(newCart);
-        });
+        Cart cart =
+                cartRepository
+                        .findByUser(currentUser)
+                        .orElseGet(
+                                () -> {
+                                    Cart newCart = new Cart(currentUser);
+                                    return cartRepository.save(newCart);
+                                });
 
         // Check if product is already in cart
         CartItem existingItem = cart.findItemByProductId(product.getId());
@@ -142,11 +151,15 @@ public class CartService {
     public CartResponse updateCartItemQuantity(final Long productId, final Integer quantity) {
         User currentUser = SecurityUtils.getCurrentUser();
 
-        Cart cart = cartRepository.findByUser(currentUser)
-                .orElseThrow(() -> new ResourceNotFoundException("Cart not found"));
+        Cart cart =
+                cartRepository
+                        .findByUser(currentUser)
+                        .orElseThrow(() -> new ResourceNotFoundException("Cart not found"));
 
-        Product product = productRepository.findById(productId)
-                .orElseThrow(() -> new ResourceNotFoundException("Product not found"));
+        Product product =
+                productRepository
+                        .findById(productId)
+                        .orElseThrow(() -> new ResourceNotFoundException("Product not found"));
 
         // Check if product is in cart
         CartItem cartItem = cart.findItemByProductId(productId);
@@ -161,7 +174,8 @@ public class CartService {
             // Check if requested quantity is available
             if (product.getStockQuantity() < quantity) {
                 throw new IllegalArgumentException(
-                        "Requested quantity exceeds available stock: " + product.getStockQuantity());
+                        "Requested quantity exceeds available stock: "
+                                + product.getStockQuantity());
             }
             cartItem.setQuantity(quantity);
         }
@@ -184,8 +198,10 @@ public class CartService {
     public CartResponse removeFromCart(final Long productId) {
         User currentUser = SecurityUtils.getCurrentUser();
 
-        Cart cart = cartRepository.findByUser(currentUser)
-                .orElseThrow(() -> new ResourceNotFoundException("Cart not found"));
+        Cart cart =
+                cartRepository
+                        .findByUser(currentUser)
+                        .orElseThrow(() -> new ResourceNotFoundException("Cart not found"));
 
         // Remove item from cart
         cart.removeItemByProductId(productId);
@@ -254,9 +270,10 @@ public class CartService {
 
         // Map cart items
         if (cart.getItems() != null) {
-            List<CartItemResponse> itemResponses = cart.getItems().stream()
-                    .map(this::mapToCartItemResponse)
-                    .collect(Collectors.toList());
+            List<CartItemResponse> itemResponses =
+                    cart.getItems().stream()
+                            .map(this::mapToCartItemResponse)
+                            .collect(Collectors.toList());
             response.setItems(itemResponses);
         } else {
             response.setItems(new ArrayList<>());
@@ -274,13 +291,14 @@ public class CartService {
     private CartItemResponse mapToCartItemResponse(final CartItem cartItem) {
         CartItemResponse response = new CartItemResponse();
         response.setId(cartItem.getId());
-        
+
         Product product = cartItem.getProduct();
         if (product != null) {
             response.setProductId(product.getId());
             response.setProductName(product.getName());
             response.setProductSku(product.getSku());
-            response.setProductBrand(product.getBrand() != null ? product.getBrand().getName() : null);
+            response.setProductBrand(
+                    product.getBrand() != null ? product.getBrand().getName() : null);
             response.setProductModel(product.getModel());
             response.setMainImageUrl(product.getMainImageUrl());
             response.setUnitPrice(product.getPrice());
@@ -297,12 +315,12 @@ public class CartService {
             response.setUnitPrice(BigDecimal.ZERO);
             response.setAvailableStock(0);
         }
-        
+
         response.setQuantity(cartItem.getQuantity());
         response.setTotalPrice(cartItem.getTotalPrice());
         response.setCreatedAt(cartItem.getCreatedAt());
         response.setUpdatedAt(cartItem.getUpdatedAt());
-        
+
         return response;
     }
 
@@ -316,14 +334,14 @@ public class CartService {
     public int cleanupExpiredCarts() {
         int count = 0;
         List<Cart> allCarts = cartRepository.findAll();
-        
+
         for (Cart cart : allCarts) {
             if (cart.isExpired(cartMaxAgeDays)) {
                 cartRepository.delete(cart);
                 count++;
             }
         }
-        
+
         return count;
     }
 }

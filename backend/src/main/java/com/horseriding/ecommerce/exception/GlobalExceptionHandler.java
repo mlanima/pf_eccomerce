@@ -144,7 +144,11 @@ public final class GlobalExceptionHandler {
     public ResponseEntity<ApiErrorResponse> handleRuntimeException(
             final RuntimeException ex, final WebRequest request) {
 
-        log.error("Unhandled exception at {}: {}", request.getDescription(false), ex.getMessage(), ex);
+        log.error(
+                "Unhandled exception at {}: {}",
+                request.getDescription(false),
+                ex.getMessage(),
+                ex);
 
         ApiErrorResponse errorResponse =
                 responseMapper.toErrorResponse(
@@ -186,7 +190,8 @@ public final class GlobalExceptionHandler {
      */
     @ExceptionHandler(org.springframework.security.core.AuthenticationException.class)
     public ResponseEntity<ApiErrorResponse> handleSpringAuthenticationException(
-            final org.springframework.security.core.AuthenticationException ex, final WebRequest request) {
+            final org.springframework.security.core.AuthenticationException ex,
+            final WebRequest request) {
 
         ApiErrorResponse errorResponse =
                 responseMapper.toErrorResponse(
@@ -228,7 +233,8 @@ public final class GlobalExceptionHandler {
      */
     @ExceptionHandler(org.springframework.security.access.AccessDeniedException.class)
     public ResponseEntity<ApiErrorResponse> handleSpringAccessDeniedException(
-            final org.springframework.security.access.AccessDeniedException ex, final WebRequest request) {
+            final org.springframework.security.access.AccessDeniedException ex,
+            final WebRequest request) {
 
         ApiErrorResponse errorResponse =
                 responseMapper.toErrorResponse(
@@ -252,8 +258,10 @@ public final class GlobalExceptionHandler {
             final HttpRequestMethodNotSupportedException ex, final WebRequest request) {
 
         String supportedMethods = String.join(", ", ex.getSupportedMethods());
-        String message = String.format("Request method '%s' not supported. Supported methods are: %s", 
-                ex.getMethod(), supportedMethods);
+        String message =
+                String.format(
+                        "Request method '%s' not supported. Supported methods are: %s",
+                        ex.getMethod(), supportedMethods);
 
         ApiErrorResponse errorResponse =
                 responseMapper.toErrorResponse(
@@ -310,7 +318,11 @@ public final class GlobalExceptionHandler {
     public ResponseEntity<ApiErrorResponse> handleGenericException(
             final Exception ex, final WebRequest request) {
 
-        log.error("Unhandled exception at {}: {}", request.getDescription(false), ex.getMessage(), ex);
+        log.error(
+                "Unhandled exception at {}: {}",
+                request.getDescription(false),
+                ex.getMessage(),
+                ex);
 
         ApiErrorResponse errorResponse =
                 responseMapper.toErrorResponse(

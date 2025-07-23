@@ -1,18 +1,15 @@
 package com.horseriding.ecommerce.products;
 
-import com.horseriding.ecommerce.auth.SecurityUtils;
 import com.horseriding.ecommerce.brands.Brand;
 import com.horseriding.ecommerce.brands.BrandRepository;
 import com.horseriding.ecommerce.categories.Category;
 import com.horseriding.ecommerce.categories.CategoryRepository;
-import com.horseriding.ecommerce.exception.AccessDeniedException;
 import com.horseriding.ecommerce.exception.ResourceNotFoundException;
 import com.horseriding.ecommerce.products.dtos.requests.ProductCreateRequest;
 import com.horseriding.ecommerce.products.dtos.requests.ProductUpdateRequest;
 import com.horseriding.ecommerce.products.dtos.responses.ProductDetailResponse;
 import com.horseriding.ecommerce.products.dtos.responses.ProductResponse;
 import com.horseriding.ecommerce.products.dtos.responses.ProductSearchResponse;
-import com.horseriding.ecommerce.users.User;
 import com.horseriding.ecommerce.users.UserRepository;
 import java.io.File;
 import java.io.IOException;
@@ -25,7 +22,6 @@ import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -82,15 +78,20 @@ public class ProductService {
         }
 
         // Get category
-        Category category = categoryRepository.findById(request.getCategoryId())
-                .orElseThrow(() -> new ResourceNotFoundException("Category not found"));
+        Category category =
+                categoryRepository
+                        .findById(request.getCategoryId())
+                        .orElseThrow(() -> new ResourceNotFoundException("Category not found"));
 
         // Create new product
-        Product product = new Product(request.getName(), request.getDescription(), request.getPrice(), category);
+        Product product =
+                new Product(
+                        request.getName(), request.getDescription(), request.getPrice(), category);
         product.setStockQuantity(request.getStockQuantity());
-        product.setLowStockThreshold(request.getLowStockThreshold() != null 
-                ? request.getLowStockThreshold() 
-                : defaultLowStockThreshold);
+        product.setLowStockThreshold(
+                request.getLowStockThreshold() != null
+                        ? request.getLowStockThreshold()
+                        : defaultLowStockThreshold);
         product.setSku(request.getSku());
         product.setFeatured(request.isFeatured());
         product.setWeightKg(request.getWeightKg());
@@ -99,11 +100,14 @@ public class ProductService {
 
         // Set brand if provided
         if (request.getBrand() != null && !request.getBrand().isEmpty()) {
-            Optional<Brand> existingBrand = brandRepository.findByNameIgnoreCase(request.getBrand());
-            Brand brand = existingBrand.orElseGet(() -> {
-                Brand newBrand = new Brand(request.getBrand());
-                return brandRepository.save(newBrand);
-            });
+            Optional<Brand> existingBrand =
+                    brandRepository.findByNameIgnoreCase(request.getBrand());
+            Brand brand =
+                    existingBrand.orElseGet(
+                            () -> {
+                                Brand newBrand = new Brand(request.getBrand());
+                                return brandRepository.save(newBrand);
+                            });
             product.setBrand(brand);
         }
 
@@ -134,21 +138,27 @@ public class ProductService {
      * @throws IllegalArgumentException if SKU already exists for another product
      */
     @Transactional
-    public ProductDetailResponse updateProduct(final Long productId, final ProductUpdateRequest request) {
+    public ProductDetailResponse updateProduct(
+            final Long productId, final ProductUpdateRequest request) {
         // Get product to update
-        Product product = productRepository.findById(productId)
-                .orElseThrow(() -> new ResourceNotFoundException("Product not found"));
+        Product product =
+                productRepository
+                        .findById(productId)
+                        .orElseThrow(() -> new ResourceNotFoundException("Product not found"));
 
         // Check if SKU is being changed and if it already exists
-        if (request.getSku() != null && !request.getSku().equals(product.getSku())
+        if (request.getSku() != null
+                && !request.getSku().equals(product.getSku())
                 && productRepository.existsBySku(request.getSku())) {
             throw new IllegalArgumentException("SKU already exists");
         }
 
         // Get category if changed
         if (!request.getCategoryId().equals(product.getCategory().getId())) {
-            Category category = categoryRepository.findById(request.getCategoryId())
-                    .orElseThrow(() -> new ResourceNotFoundException("Category not found"));
+            Category category =
+                    categoryRepository
+                            .findById(request.getCategoryId())
+                            .orElseThrow(() -> new ResourceNotFoundException("Category not found"));
             product.setCategory(category);
         }
 
@@ -169,11 +179,14 @@ public class ProductService {
             if (request.getBrand().isEmpty()) {
                 product.setBrand(null);
             } else {
-                Optional<Brand> existingBrand = brandRepository.findByNameIgnoreCase(request.getBrand());
-                Brand brand = existingBrand.orElseGet(() -> {
-                    Brand newBrand = new Brand(request.getBrand());
-                    return brandRepository.save(newBrand);
-                });
+                Optional<Brand> existingBrand =
+                        brandRepository.findByNameIgnoreCase(request.getBrand());
+                Brand brand =
+                        existingBrand.orElseGet(
+                                () -> {
+                                    Brand newBrand = new Brand(request.getBrand());
+                                    return brandRepository.save(newBrand);
+                                });
                 product.setBrand(brand);
             }
         }
@@ -204,8 +217,10 @@ public class ProductService {
     @Transactional
     public void deleteProduct(final Long productId) {
         // Get product to delete
-        Product product = productRepository.findById(productId)
-                .orElseThrow(() -> new ResourceNotFoundException("Product not found"));
+        Product product =
+                productRepository
+                        .findById(productId)
+                        .orElseThrow(() -> new ResourceNotFoundException("Product not found"));
 
         // Delete product
         productRepository.delete(product);
@@ -219,8 +234,10 @@ public class ProductService {
      * @throws ResourceNotFoundException if the product is not found
      */
     public ProductDetailResponse getProductById(final Long productId) {
-        Product product = productRepository.findById(productId)
-                .orElseThrow(() -> new ResourceNotFoundException("Product not found"));
+        Product product =
+                productRepository
+                        .findById(productId)
+                        .orElseThrow(() -> new ResourceNotFoundException("Product not found"));
 
         return mapToProductDetailResponse(product);
     }
@@ -233,8 +250,10 @@ public class ProductService {
      * @throws ResourceNotFoundException if the product is not found
      */
     public ProductDetailResponse getProductBySku(final String sku) {
-        Product product = productRepository.findBySku(sku)
-                .orElseThrow(() -> new ResourceNotFoundException("Product not found"));
+        Product product =
+                productRepository
+                        .findBySku(sku)
+                        .orElseThrow(() -> new ResourceNotFoundException("Product not found"));
 
         return mapToProductDetailResponse(product);
     }
@@ -258,9 +277,12 @@ public class ProductService {
      * @return page of products in the category
      * @throws ResourceNotFoundException if the category is not found
      */
-    public Page<ProductResponse> getProductsByCategory(final Long categoryId, final Pageable pageable) {
-        Category category = categoryRepository.findById(categoryId)
-                .orElseThrow(() -> new ResourceNotFoundException("Category not found"));
+    public Page<ProductResponse> getProductsByCategory(
+            final Long categoryId, final Pageable pageable) {
+        Category category =
+                categoryRepository
+                        .findById(categoryId)
+                        .orElseThrow(() -> new ResourceNotFoundException("Category not found"));
 
         Page<Product> products = productRepository.findByCategory(category, pageable);
         return products.map(this::mapToProductResponse);
@@ -275,8 +297,10 @@ public class ProductService {
      * @throws ResourceNotFoundException if the brand is not found
      */
     public Page<ProductResponse> getProductsByBrand(final Long brandId, final Pageable pageable) {
-        Brand brand = brandRepository.findById(brandId)
-                .orElseThrow(() -> new ResourceNotFoundException("Brand not found"));
+        Brand brand =
+                brandRepository
+                        .findById(brandId)
+                        .orElseThrow(() -> new ResourceNotFoundException("Brand not found"));
 
         Page<Product> products = productRepository.findByBrand(brand, pageable);
         return products.map(this::mapToProductResponse);
@@ -289,7 +313,8 @@ public class ProductService {
      * @param pageable pagination information
      * @return page of products matching the search criteria
      */
-    public Page<ProductSearchResponse> searchProducts(final String searchTerm, final Pageable pageable) {
+    public Page<ProductSearchResponse> searchProducts(
+            final String searchTerm, final Pageable pageable) {
         Page<Product> products = productRepository.searchProducts(searchTerm, pageable);
         return products.map(this::mapToProductSearchResponse);
     }
@@ -311,8 +336,10 @@ public class ProductService {
         }
 
         // Get product to update
-        Product product = productRepository.findById(productId)
-                .orElseThrow(() -> new ResourceNotFoundException("Product not found"));
+        Product product =
+                productRepository
+                        .findById(productId)
+                        .orElseThrow(() -> new ResourceNotFoundException("Product not found"));
 
         // Update stock quantity
         product.setStockQuantity(quantity);
@@ -323,9 +350,13 @@ public class ProductService {
         // Check if stock is low and notify (in a real application, this would send notifications)
         if (updatedProduct.isLowStock()) {
             // Log low stock for now
-            System.out.println("Low stock alert: Product " + updatedProduct.getName() 
-                    + " (ID: " + updatedProduct.getId() 
-                    + ") has low stock: " + updatedProduct.getStockQuantity());
+            System.out.println(
+                    "Low stock alert: Product "
+                            + updatedProduct.getName()
+                            + " (ID: "
+                            + updatedProduct.getId()
+                            + ") has low stock: "
+                            + updatedProduct.getStockQuantity());
         }
 
         // Return product response
@@ -343,20 +374,23 @@ public class ProductService {
         // This is not efficient for large datasets, but works for now
         // In a real application, we would add a custom query to the repository
         Page<Product> allProducts = productRepository.findAll(pageable);
-        
+
         // Filter products and convert to list
-        List<Product> lowStockProducts = allProducts.getContent().stream()
-                .filter(Product::isLowStock)
-                .collect(Collectors.toList());
-        
+        List<Product> lowStockProducts =
+                allProducts.getContent().stream()
+                        .filter(Product::isLowStock)
+                        .collect(Collectors.toList());
+
         // Create a new Page from the filtered list
         int start = (int) pageable.getOffset();
         int end = Math.min((start + pageable.getPageSize()), lowStockProducts.size());
-        List<Product> pageContent = start < lowStockProducts.size() ? 
-                lowStockProducts.subList(start, end) : new ArrayList<>();
-        
+        List<Product> pageContent =
+                start < lowStockProducts.size()
+                        ? lowStockProducts.subList(start, end)
+                        : new ArrayList<>();
+
         Page<Product> lowStockPage = new PageImpl<>(pageContent, pageable, lowStockProducts.size());
-        
+
         return lowStockPage.map(this::mapToProductResponse);
     }
 
@@ -371,21 +405,25 @@ public class ProductService {
         // This is not efficient for large datasets, but works for now
         // In a real application, we would add a custom query to the repository
         Page<Product> allProducts = productRepository.findAll(pageable);
-        
+
         // Filter products and convert to list
-        List<Product> outOfStockProducts = allProducts.getContent().stream()
-                .filter(Product::isOutOfStock)
-                .collect(Collectors.toList());
-        
+        List<Product> outOfStockProducts =
+                allProducts.getContent().stream()
+                        .filter(Product::isOutOfStock)
+                        .collect(Collectors.toList());
+
         // Create a new Page from the filtered list
         int start = (int) pageable.getOffset();
         int end = Math.min((start + pageable.getPageSize()), outOfStockProducts.size());
-        List<Product> pageContent = start < outOfStockProducts.size() ? 
-                outOfStockProducts.subList(start, end) : new ArrayList<>();
-        
-        Page<Product> outOfStockPage = new org.springframework.data.domain.PageImpl<>(
-                pageContent, pageable, outOfStockProducts.size());
-        
+        List<Product> pageContent =
+                start < outOfStockProducts.size()
+                        ? outOfStockProducts.subList(start, end)
+                        : new ArrayList<>();
+
+        Page<Product> outOfStockPage =
+                new org.springframework.data.domain.PageImpl<>(
+                        pageContent, pageable, outOfStockProducts.size());
+
         return outOfStockPage.map(this::mapToProductResponse);
     }
 
@@ -402,8 +440,10 @@ public class ProductService {
     public String uploadProductImage(final Long productId, final MultipartFile file)
             throws IOException {
         // Get product
-        Product product = productRepository.findById(productId)
-                .orElseThrow(() -> new ResourceNotFoundException("Product not found"));
+        Product product =
+                productRepository
+                        .findById(productId)
+                        .orElseThrow(() -> new ResourceNotFoundException("Product not found"));
 
         // Create upload directory if it doesn't exist
         File directory = new File(uploadDir);
@@ -412,9 +452,16 @@ public class ProductService {
         }
 
         // Generate unique filename
-        String timestamp = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMddHHmmss"));
-        String uniqueFilename = productId + "_" + timestamp + "_" + UUID.randomUUID().toString() + "_" 
-                + file.getOriginalFilename();
+        String timestamp =
+                LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMddHHmmss"));
+        String uniqueFilename =
+                productId
+                        + "_"
+                        + timestamp
+                        + "_"
+                        + UUID.randomUUID().toString()
+                        + "_"
+                        + file.getOriginalFilename();
         Path targetPath = Paths.get(uploadDir).resolve(uniqueFilename);
 
         // Save file
@@ -441,8 +488,10 @@ public class ProductService {
     @Transactional
     public void removeProductImage(final Long productId, final String imageUrl) {
         // Get product
-        Product product = productRepository.findById(productId)
-                .orElseThrow(() -> new ResourceNotFoundException("Product not found"));
+        Product product =
+                productRepository
+                        .findById(productId)
+                        .orElseThrow(() -> new ResourceNotFoundException("Product not found"));
 
         // Check if image URL exists
         if (product.getImageUrls() == null || !product.getImageUrls().contains(imageUrl)) {

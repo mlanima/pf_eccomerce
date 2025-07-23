@@ -3,7 +3,6 @@ package com.horseriding.ecommerce.users;
 import com.horseriding.ecommerce.auth.SecurityUtils;
 import com.horseriding.ecommerce.auth.TokenService;
 import com.horseriding.ecommerce.auth.dtos.responses.AuthResponse;
-import com.horseriding.ecommerce.exception.AccessDeniedException;
 import com.horseriding.ecommerce.exception.AuthenticationException;
 import com.horseriding.ecommerce.exception.ResourceNotFoundException;
 import com.horseriding.ecommerce.users.dtos.requests.UserLoginRequest;
@@ -53,12 +52,13 @@ public class UserService {
         }
 
         // Create new user with CUSTOMER role
-        User user = new User(
-                request.getEmail(),
-                passwordEncoder.encode(request.getPassword()),
-                request.getFirstName(),
-                request.getLastName(),
-                UserRole.CUSTOMER);
+        User user =
+                new User(
+                        request.getEmail(),
+                        passwordEncoder.encode(request.getPassword()),
+                        request.getFirstName(),
+                        request.getLastName(),
+                        UserRole.CUSTOMER);
 
         user.setPhoneNumber(request.getPhoneNumber());
 
@@ -78,8 +78,11 @@ public class UserService {
      */
     public AuthResponse loginUser(final UserLoginRequest request) {
         // Find user by email
-        User user = userRepository.findByEmail(request.getEmail())
-                .orElseThrow(() -> new AuthenticationException("Invalid email or password"));
+        User user =
+                userRepository
+                        .findByEmail(request.getEmail())
+                        .orElseThrow(
+                                () -> new AuthenticationException("Invalid email or password"));
 
         // Verify password
         if (!passwordEncoder.matches(request.getPassword(), user.getPassword())) {
@@ -96,7 +99,7 @@ public class UserService {
                 mapToUserProfileResponse(user),
                 user.getRole(),
                 900 // 15 minutes in seconds (access token expiration)
-        );
+                );
     }
 
     /**
@@ -147,12 +150,13 @@ public class UserService {
         }
 
         // Create new user with ADMIN role
-        User user = new User(
-                request.getEmail(),
-                passwordEncoder.encode(request.getPassword()),
-                request.getFirstName(),
-                request.getLastName(),
-                UserRole.ADMIN);
+        User user =
+                new User(
+                        request.getEmail(),
+                        passwordEncoder.encode(request.getPassword()),
+                        request.getFirstName(),
+                        request.getLastName(),
+                        UserRole.ADMIN);
 
         user.setPhoneNumber(request.getPhoneNumber());
 
@@ -170,14 +174,13 @@ public class UserService {
      */
     public List<UserResponse> getAllAdminUsers() {
         // Get all admin users
-        List<User> adminUsers = userRepository.findAll().stream()
-                .filter(user -> user.isAdmin() || user.isSuperAdmin())
-                .collect(Collectors.toList());
+        List<User> adminUsers =
+                userRepository.findAll().stream()
+                        .filter(user -> user.isAdmin() || user.isSuperAdmin())
+                        .collect(Collectors.toList());
 
         // Map to response DTOs
-        return adminUsers.stream()
-                .map(this::mapToUserResponse)
-                .collect(Collectors.toList());
+        return adminUsers.stream().map(this::mapToUserResponse).collect(Collectors.toList());
     }
 
     /**
@@ -190,8 +193,10 @@ public class UserService {
     @Transactional
     public void deleteAdminUser(final Long adminUserId) {
         // Get admin user to delete
-        User adminUser = userRepository.findById(adminUserId)
-                .orElseThrow(() -> new ResourceNotFoundException("Admin user not found"));
+        User adminUser =
+                userRepository
+                        .findById(adminUserId)
+                        .orElseThrow(() -> new ResourceNotFoundException("Admin user not found"));
 
         // Check if admin user is a superadmin
         if (adminUser.isSuperAdmin()) {
@@ -221,8 +226,10 @@ public class UserService {
         User currentUser = SecurityUtils.getCurrentUser();
 
         // Get admin user to update
-        User adminUser = userRepository.findById(adminUserId)
-                .orElseThrow(() -> new ResourceNotFoundException("Admin user not found"));
+        User adminUser =
+                userRepository
+                        .findById(adminUserId)
+                        .orElseThrow(() -> new ResourceNotFoundException("Admin user not found"));
 
         // Check if admin user is a superadmin
         if (adminUser.isSuperAdmin() && !adminUser.getId().equals(currentUser.getId())) {

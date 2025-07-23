@@ -41,10 +41,10 @@ public class JwtTokenProvider {
 
     /** Token type claim key. */
     private static final String TOKEN_TYPE_CLAIM = "token_type";
-    
+
     /** Access token type. */
     private static final String ACCESS_TOKEN_TYPE = "access";
-    
+
     /** Refresh token type. */
     private static final String REFRESH_TOKEN_TYPE = "refresh";
 
@@ -184,7 +184,8 @@ public class JwtTokenProvider {
      * @param expiration the expiration time in milliseconds
      * @return the created JWT token
      */
-    private String createToken(final Map<String, Object> claims, final String subject, final long expiration) {
+    private String createToken(
+            final Map<String, Object> claims, final String subject, final long expiration) {
         Date now = new Date(System.currentTimeMillis());
         Date expiryDate = new Date(now.getTime() + expiration);
 
@@ -208,7 +209,7 @@ public class JwtTokenProvider {
         try {
             final String username = extractUsername(token);
             final String tokenType = extractTokenType(token);
-            return username.equals(user.getEmail()) 
+            return username.equals(user.getEmail())
                     && ACCESS_TOKEN_TYPE.equals(tokenType)
                     && !isTokenExpired(token);
         } catch (JwtException e) {

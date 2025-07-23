@@ -46,7 +46,8 @@ public class CategoryController {
      */
     @PostMapping
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<CategoryResponse> createCategory(@Valid @RequestBody CategoryCreateRequest request) {
+    public ResponseEntity<CategoryResponse> createCategory(
+            @Valid @RequestBody CategoryCreateRequest request) {
         CategoryResponse category = categoryService.createCategory(request);
         return new ResponseEntity<>(category, HttpStatus.CREATED);
     }
@@ -61,8 +62,7 @@ public class CategoryController {
     @PutMapping("/{categoryId}")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<CategoryResponse> updateCategory(
-            @PathVariable Long categoryId,
-            @Valid @RequestBody CategoryUpdateRequest request) {
+            @PathVariable Long categoryId, @Valid @RequestBody CategoryUpdateRequest request) {
         CategoryResponse category = categoryService.updateCategory(categoryId, request);
         return ResponseEntity.ok(category);
     }
@@ -130,21 +130,23 @@ public class CategoryController {
             @RequestParam(defaultValue = "10") int size,
             @RequestParam(defaultValue = "name") String sortBy,
             @RequestParam(defaultValue = "asc") String sortDir) {
-        
-        Sort.Direction direction = sortDir.equalsIgnoreCase("desc") ? Sort.Direction.DESC : Sort.Direction.ASC;
+
+        Sort.Direction direction =
+                sortDir.equalsIgnoreCase("desc") ? Sort.Direction.DESC : Sort.Direction.ASC;
         Pageable pageable = PageRequest.of(page, size, Sort.by(direction, sortBy));
-        
+
         Page<CategoryResponse> categoriesPage = categoryService.getAllCategories(pageable);
-        
-        PaginationResponse<CategoryResponse> response = new PaginationResponse<>(
-                categoriesPage.getContent(),
-                categoriesPage.getNumber(),
-                categoriesPage.getSize(),
-                categoriesPage.getTotalElements(),
-                categoriesPage.getTotalPages(),
-                categoriesPage.isFirst(),
-                categoriesPage.isLast());
-        
+
+        PaginationResponse<CategoryResponse> response =
+                new PaginationResponse<>(
+                        categoriesPage.getContent(),
+                        categoriesPage.getNumber(),
+                        categoriesPage.getSize(),
+                        categoriesPage.getTotalElements(),
+                        categoriesPage.getTotalPages(),
+                        categoriesPage.isFirst(),
+                        categoriesPage.isLast());
+
         return ResponseEntity.ok(response);
     }
 
@@ -165,21 +167,24 @@ public class CategoryController {
             @RequestParam(defaultValue = "10") int size,
             @RequestParam(defaultValue = "name") String sortBy,
             @RequestParam(defaultValue = "asc") String sortDir) {
-        
-        Sort.Direction direction = sortDir.equalsIgnoreCase("desc") ? Sort.Direction.DESC : Sort.Direction.ASC;
+
+        Sort.Direction direction =
+                sortDir.equalsIgnoreCase("desc") ? Sort.Direction.DESC : Sort.Direction.ASC;
         Pageable pageable = PageRequest.of(page, size, Sort.by(direction, sortBy));
-        
-        Page<CategoryResponse> categoriesPage = categoryService.searchCategories(searchTerm, pageable);
-        
-        PaginationResponse<CategoryResponse> response = new PaginationResponse<>(
-                categoriesPage.getContent(),
-                categoriesPage.getNumber(),
-                categoriesPage.getSize(),
-                categoriesPage.getTotalElements(),
-                categoriesPage.getTotalPages(),
-                categoriesPage.isFirst(),
-                categoriesPage.isLast());
-        
+
+        Page<CategoryResponse> categoriesPage =
+                categoryService.searchCategories(searchTerm, pageable);
+
+        PaginationResponse<CategoryResponse> response =
+                new PaginationResponse<>(
+                        categoriesPage.getContent(),
+                        categoriesPage.getNumber(),
+                        categoriesPage.getSize(),
+                        categoriesPage.getTotalElements(),
+                        categoriesPage.getTotalPages(),
+                        categoriesPage.isFirst(),
+                        categoriesPage.isLast());
+
         return ResponseEntity.ok(response);
     }
 

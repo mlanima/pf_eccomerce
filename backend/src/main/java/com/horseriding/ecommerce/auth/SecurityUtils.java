@@ -26,30 +26,34 @@ public final class SecurityUtils {
      */
     public static User getCurrentUser() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        
+
         if (authentication == null || !authentication.isAuthenticated()) {
             log.warn("Attempted to get current user when no user is authenticated");
             throw new IllegalStateException("No authenticated user found");
         }
 
         Object principal = authentication.getPrincipal();
-        
+
         if (principal instanceof UserPrincipal) {
             return ((UserPrincipal) principal).getUser();
         }
-        
+
         // Fallback for backward compatibility during transition
         if (principal instanceof User) {
             return (User) principal;
         }
-        
+
         if (principal instanceof UserDetails) {
-            log.error("UserDetails principal is not of expected type UserPrincipal: {}", principal.getClass().getName());
-            throw new IllegalStateException("UserDetails principal is not of expected type UserPrincipal");
+            log.error(
+                    "UserDetails principal is not of expected type UserPrincipal: {}",
+                    principal.getClass().getName());
+            throw new IllegalStateException(
+                    "UserDetails principal is not of expected type UserPrincipal");
         }
-        
+
         log.error("Unexpected principal type: {}", principal.getClass().getName());
-        throw new IllegalStateException("Unexpected principal type: " + principal.getClass().getName());
+        throw new IllegalStateException(
+                "Unexpected principal type: " + principal.getClass().getName());
     }
 
     /**
@@ -60,20 +64,21 @@ public final class SecurityUtils {
      */
     public static UserPrincipal getCurrentUserPrincipal() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        
+
         if (authentication == null || !authentication.isAuthenticated()) {
             log.warn("Attempted to get current UserPrincipal when no user is authenticated");
             throw new IllegalStateException("No authenticated user found");
         }
 
         Object principal = authentication.getPrincipal();
-        
+
         if (principal instanceof UserPrincipal) {
             return (UserPrincipal) principal;
         }
-        
+
         log.error("Principal is not of type UserPrincipal: {}", principal.getClass().getName());
-        throw new IllegalStateException("Principal is not of type UserPrincipal: " + principal.getClass().getName());
+        throw new IllegalStateException(
+                "Principal is not of type UserPrincipal: " + principal.getClass().getName());
     }
 
     /**
@@ -113,9 +118,9 @@ public final class SecurityUtils {
      */
     public static boolean isAuthenticated() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        return authentication != null && 
-               authentication.isAuthenticated() && 
-               !"anonymousUser".equals(authentication.getPrincipal());
+        return authentication != null
+                && authentication.isAuthenticated()
+                && !"anonymousUser".equals(authentication.getPrincipal());
     }
 
     /**
@@ -128,7 +133,7 @@ public final class SecurityUtils {
         if (!isAuthenticated()) {
             return false;
         }
-        
+
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         return authentication.getAuthorities().stream()
                 .anyMatch(authority -> authority.getAuthority().equals("ROLE_" + role));
@@ -151,7 +156,7 @@ public final class SecurityUtils {
     public static boolean hasSuperAdminPrivileges() {
         return hasRole("SUPERADMIN");
     }
-    
+
     /**
      * Checks if the current user is the owner of the specified resource.
      *
@@ -162,7 +167,7 @@ public final class SecurityUtils {
         if (!isAuthenticated()) {
             return false;
         }
-        
+
         try {
             Long currentUserId = getCurrentUserId();
             return currentUserId.equals(resourceUserId);

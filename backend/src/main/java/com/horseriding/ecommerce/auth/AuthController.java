@@ -29,10 +29,10 @@ public class AuthController {
 
     /** User service for authentication operations. */
     private final UserService userService;
-    
+
     /** Token service for token management operations. */
     private final TokenService tokenService;
-    
+
     /** JWT token provider for token operations. */
     private final JwtTokenProvider jwtTokenProvider;
 
@@ -43,7 +43,8 @@ public class AuthController {
      * @return the created user profile
      */
     @PostMapping("/register")
-    public ResponseEntity<UserProfileResponse> register(@Valid @RequestBody UserRegistrationRequest request) {
+    public ResponseEntity<UserProfileResponse> register(
+            @Valid @RequestBody UserRegistrationRequest request) {
         System.out.println("Hi there!!!");
         UserProfileResponse response = userService.registerUser(request);
         return new ResponseEntity<>(response, HttpStatus.CREATED);
@@ -68,18 +69,18 @@ public class AuthController {
      * @return new access token and refresh token information
      */
     @PostMapping("/refresh")
-    public ResponseEntity<TokenRefreshResponse> refreshToken(@Valid @RequestBody TokenRefreshRequest request) {
-        TokenService.TokenPair tokenPair = tokenService.refreshAccessToken(request.getRefreshToken());
-        
+    public ResponseEntity<TokenRefreshResponse> refreshToken(
+            @Valid @RequestBody TokenRefreshRequest request) {
+        TokenService.TokenPair tokenPair =
+                tokenService.refreshAccessToken(request.getRefreshToken());
+
         // Get access token expiration in seconds
         long expiresIn = jwtTokenProvider.getAccessTokenExpirationInSeconds();
-        
-        TokenRefreshResponse response = new TokenRefreshResponse(
-                tokenPair.getAccessToken(),
-                tokenPair.getRefreshToken(),
-                expiresIn
-        );
-        
+
+        TokenRefreshResponse response =
+                new TokenRefreshResponse(
+                        tokenPair.getAccessToken(), tokenPair.getRefreshToken(), expiresIn);
+
         return ResponseEntity.ok(response);
     }
 
@@ -93,15 +94,15 @@ public class AuthController {
     public ResponseEntity<SuccessResponse> logout(HttpServletRequest request) {
         String authHeader = request.getHeader("Authorization");
         String accessToken = null;
-        
+
         if (authHeader != null && authHeader.startsWith("Bearer ")) {
             accessToken = authHeader.substring(7);
         }
-        
+
         // Extract refresh token from request body if provided
         // For now, we'll just handle access token blacklisting
         tokenService.logout(accessToken, null);
-        
+
         SuccessResponse<Void> response = new SuccessResponse<>("Logged out successfully", 200);
         return ResponseEntity.ok(response);
     }

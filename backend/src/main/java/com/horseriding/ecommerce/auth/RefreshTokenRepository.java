@@ -40,8 +40,11 @@ public interface RefreshTokenRepository extends JpaRepository<RefreshToken, Long
      * @param now the current timestamp
      * @return list of valid refresh tokens for the user
      */
-    @Query("SELECT rt FROM RefreshToken rt WHERE rt.user = :user AND rt.revoked = false AND rt.expiresAt > :now")
-    List<RefreshToken> findValidTokensByUser(@Param("user") User user, @Param("now") LocalDateTime now);
+    @Query(
+            "SELECT rt FROM RefreshToken rt WHERE rt.user = :user AND rt.revoked = false AND"
+                    + " rt.expiresAt > :now")
+    List<RefreshToken> findValidTokensByUser(
+            @Param("user") User user, @Param("now") LocalDateTime now);
 
     /**
      * Revoke all refresh tokens for a specific user.
@@ -50,8 +53,11 @@ public interface RefreshTokenRepository extends JpaRepository<RefreshToken, Long
      * @param revokedAt the revocation timestamp
      */
     @Modifying
-    @Query("UPDATE RefreshToken rt SET rt.revoked = true, rt.revokedAt = :revokedAt WHERE rt.user = :user AND rt.revoked = false")
-    void revokeAllTokensByUser(@Param("user") User user, @Param("revokedAt") LocalDateTime revokedAt);
+    @Query(
+            "UPDATE RefreshToken rt SET rt.revoked = true, rt.revokedAt = :revokedAt WHERE rt.user"
+                    + " = :user AND rt.revoked = false")
+    void revokeAllTokensByUser(
+            @Param("user") User user, @Param("revokedAt") LocalDateTime revokedAt);
 
     /**
      * Delete all expired refresh tokens.
@@ -78,6 +84,8 @@ public interface RefreshTokenRepository extends JpaRepository<RefreshToken, Long
      * @param now the current timestamp
      * @return true if the token exists and is valid
      */
-    @Query("SELECT COUNT(rt) > 0 FROM RefreshToken rt WHERE rt.token = :token AND rt.revoked = false AND rt.expiresAt > :now")
+    @Query(
+            "SELECT COUNT(rt) > 0 FROM RefreshToken rt WHERE rt.token = :token AND rt.revoked ="
+                    + " false AND rt.expiresAt > :now")
     boolean existsValidToken(@Param("token") String token, @Param("now") LocalDateTime now);
 }

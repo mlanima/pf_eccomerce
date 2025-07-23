@@ -24,7 +24,8 @@ import org.springframework.transaction.annotation.Transactional;
 public class CustomUserDetailsService implements UserDetailsService {
 
     private final UserRepository userRepository;
-    private final AccountStatusUserDetailsChecker detailsChecker = new AccountStatusUserDetailsChecker();
+    private final AccountStatusUserDetailsChecker detailsChecker =
+            new AccountStatusUserDetailsChecker();
 
     /**
      * Loads user details by username (email) for Spring Security authentication.
@@ -37,16 +38,21 @@ public class CustomUserDetailsService implements UserDetailsService {
     @Transactional(readOnly = true)
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
         log.debug("Loading user details for username: {}", username);
-        
+
         try {
-            User user = userRepository.findByEmail(username)
-                    .orElseThrow(() -> new UsernameNotFoundException("User not found with email: " + username));
-            
+            User user =
+                    userRepository
+                            .findByEmail(username)
+                            .orElseThrow(
+                                    () ->
+                                            new UsernameNotFoundException(
+                                                    "User not found with email: " + username));
+
             UserPrincipal userPrincipal = UserPrincipal.create(user);
-            
+
             // Check account status (locked, disabled, expired)
             validateUserStatus(userPrincipal);
-            
+
             log.debug("Successfully loaded user details for: {}", username);
             return userPrincipal;
         } catch (UsernameNotFoundException e) {
@@ -60,7 +66,7 @@ public class CustomUserDetailsService implements UserDetailsService {
             throw new UsernameNotFoundException("Authentication failed for user: " + username, e);
         }
     }
-    
+
     /**
      * Loads user details by user ID for Spring Security authentication.
      *
@@ -71,16 +77,21 @@ public class CustomUserDetailsService implements UserDetailsService {
     @Transactional(readOnly = true)
     public UserDetails loadUserById(Long id) throws UsernameNotFoundException {
         log.debug("Loading user details for ID: {}", id);
-        
+
         try {
-            User user = userRepository.findById(id)
-                    .orElseThrow(() -> new UsernameNotFoundException("User not found with ID: " + id));
-            
+            User user =
+                    userRepository
+                            .findById(id)
+                            .orElseThrow(
+                                    () ->
+                                            new UsernameNotFoundException(
+                                                    "User not found with ID: " + id));
+
             UserPrincipal userPrincipal = UserPrincipal.create(user);
-            
+
             // Check account status (locked, disabled, expired)
             validateUserStatus(userPrincipal);
-            
+
             log.debug("Successfully loaded user details for ID: {}", id);
             return userPrincipal;
         } catch (UsernameNotFoundException e) {
@@ -94,7 +105,7 @@ public class CustomUserDetailsService implements UserDetailsService {
             throw new UsernameNotFoundException("Authentication failed for user ID: " + id, e);
         }
     }
-    
+
     /**
      * Gets a user by email without creating a UserPrincipal.
      * Used for internal service operations.
@@ -106,9 +117,10 @@ public class CustomUserDetailsService implements UserDetailsService {
     @Transactional(readOnly = true)
     public User getUserByEmail(String email) throws ResourceNotFoundException {
         log.debug("Getting user by email: {}", email);
-        
+
         try {
-            return userRepository.findByEmail(email)
+            return userRepository
+                    .findByEmail(email)
                     .orElseThrow(() -> new ResourceNotFoundException("User", "email", email));
         } catch (ResourceNotFoundException e) {
             log.warn("User not found with email: {}", email);
@@ -118,7 +130,7 @@ public class CustomUserDetailsService implements UserDetailsService {
             throw new ResourceNotFoundException("User", "email", email);
         }
     }
-    
+
     /**
      * Gets a user by ID without creating a UserPrincipal.
      * Used for internal service operations.
@@ -130,9 +142,10 @@ public class CustomUserDetailsService implements UserDetailsService {
     @Transactional(readOnly = true)
     public User getUserById(Long id) throws ResourceNotFoundException {
         log.debug("Getting user by ID: {}", id);
-        
+
         try {
-            return userRepository.findById(id)
+            return userRepository
+                    .findById(id)
                     .orElseThrow(() -> new ResourceNotFoundException("User", "id", id));
         } catch (ResourceNotFoundException e) {
             log.warn("User not found with ID: {}", id);
@@ -142,7 +155,7 @@ public class CustomUserDetailsService implements UserDetailsService {
             throw new ResourceNotFoundException("User", "id", id);
         }
     }
-    
+
     /**
      * Validates the user's account status.
      * Checks if the account is locked, disabled, or expired.

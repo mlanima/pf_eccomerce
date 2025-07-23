@@ -3,7 +3,6 @@ package com.horseriding.ecommerce.cart;
 import com.horseriding.ecommerce.cart.dtos.requests.AddToCartRequest;
 import com.horseriding.ecommerce.cart.dtos.requests.UpdateCartItemRequest;
 import com.horseriding.ecommerce.cart.dtos.responses.CartResponse;
-import com.horseriding.ecommerce.common.dtos.responses.SuccessResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -15,7 +14,6 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 /**
@@ -65,8 +63,7 @@ public class CartController {
     @PutMapping("/items/{productId}")
     @PreAuthorize("isAuthenticated()")
     public ResponseEntity<CartResponse> updateCartItemQuantity(
-            @PathVariable Long productId,
-            @Valid @RequestBody UpdateCartItemRequest request) {
+            @PathVariable Long productId, @Valid @RequestBody UpdateCartItemRequest request) {
         CartResponse cart = cartService.updateCartItemQuantity(productId, request.getQuantity());
         return ResponseEntity.ok(cart);
     }

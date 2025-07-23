@@ -46,7 +46,8 @@ public class OrderController {
      */
     @PostMapping
     @PreAuthorize("isAuthenticated()")
-    public ResponseEntity<OrderResponse> createOrder(@Valid @RequestBody OrderCreateRequest request) {
+    public ResponseEntity<OrderResponse> createOrder(
+            @Valid @RequestBody OrderCreateRequest request) {
         OrderResponse order = orderService.createOrder(request);
         return new ResponseEntity<>(order, HttpStatus.CREATED);
     }
@@ -67,8 +68,9 @@ public class OrderController {
             @RequestParam String paypalPaymentId,
             @RequestParam String paypalPayerId,
             @RequestParam String paypalOrderId) {
-        OrderResponse order = orderService.createOrderFromCart(
-                shippingDetails, paypalPaymentId, paypalPayerId, paypalOrderId);
+        OrderResponse order =
+                orderService.createOrderFromCart(
+                        shippingDetails, paypalPaymentId, paypalPayerId, paypalOrderId);
         return new ResponseEntity<>(order, HttpStatus.CREATED);
     }
 
@@ -82,8 +84,7 @@ public class OrderController {
     @PutMapping("/{orderId}")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<OrderResponse> updateOrderStatus(
-            @PathVariable Long orderId,
-            @Valid @RequestBody OrderUpdateRequest request) {
+            @PathVariable Long orderId, @Valid @RequestBody OrderUpdateRequest request) {
         OrderResponse order = orderService.updateOrderStatus(orderId, request);
         return ResponseEntity.ok(order);
     }
@@ -116,21 +117,23 @@ public class OrderController {
             @RequestParam(defaultValue = "10") int size,
             @RequestParam(defaultValue = "createdAt") String sortBy,
             @RequestParam(defaultValue = "desc") String sortDir) {
-        
-        Sort.Direction direction = sortDir.equalsIgnoreCase("desc") ? Sort.Direction.DESC : Sort.Direction.ASC;
+
+        Sort.Direction direction =
+                sortDir.equalsIgnoreCase("desc") ? Sort.Direction.DESC : Sort.Direction.ASC;
         Pageable pageable = PageRequest.of(page, size, Sort.by(direction, sortBy));
-        
+
         Page<OrderHistoryResponse> ordersPage = orderService.getCurrentUserOrders(pageable);
-        
-        PaginationResponse<OrderHistoryResponse> response = new PaginationResponse<>(
-                ordersPage.getContent(),
-                ordersPage.getNumber(),
-                ordersPage.getSize(),
-                ordersPage.getTotalElements(),
-                ordersPage.getTotalPages(),
-                ordersPage.isFirst(),
-                ordersPage.isLast());
-        
+
+        PaginationResponse<OrderHistoryResponse> response =
+                new PaginationResponse<>(
+                        ordersPage.getContent(),
+                        ordersPage.getNumber(),
+                        ordersPage.getSize(),
+                        ordersPage.getTotalElements(),
+                        ordersPage.getTotalPages(),
+                        ordersPage.isFirst(),
+                        ordersPage.isLast());
+
         return ResponseEntity.ok(response);
     }
 
@@ -150,21 +153,23 @@ public class OrderController {
             @RequestParam(defaultValue = "10") int size,
             @RequestParam(defaultValue = "createdAt") String sortBy,
             @RequestParam(defaultValue = "desc") String sortDir) {
-        
-        Sort.Direction direction = sortDir.equalsIgnoreCase("desc") ? Sort.Direction.DESC : Sort.Direction.ASC;
+
+        Sort.Direction direction =
+                sortDir.equalsIgnoreCase("desc") ? Sort.Direction.DESC : Sort.Direction.ASC;
         Pageable pageable = PageRequest.of(page, size, Sort.by(direction, sortBy));
-        
+
         Page<OrderResponse> ordersPage = orderService.getAllOrders(pageable);
-        
-        PaginationResponse<OrderResponse> response = new PaginationResponse<>(
-                ordersPage.getContent(),
-                ordersPage.getNumber(),
-                ordersPage.getSize(),
-                ordersPage.getTotalElements(),
-                ordersPage.getTotalPages(),
-                ordersPage.isFirst(),
-                ordersPage.isLast());
-        
+
+        PaginationResponse<OrderResponse> response =
+                new PaginationResponse<>(
+                        ordersPage.getContent(),
+                        ordersPage.getNumber(),
+                        ordersPage.getSize(),
+                        ordersPage.getTotalElements(),
+                        ordersPage.getTotalPages(),
+                        ordersPage.isFirst(),
+                        ordersPage.isLast());
+
         return ResponseEntity.ok(response);
     }
 
@@ -186,21 +191,23 @@ public class OrderController {
             @RequestParam(defaultValue = "10") int size,
             @RequestParam(defaultValue = "createdAt") String sortBy,
             @RequestParam(defaultValue = "desc") String sortDir) {
-        
-        Sort.Direction direction = sortDir.equalsIgnoreCase("desc") ? Sort.Direction.DESC : Sort.Direction.ASC;
+
+        Sort.Direction direction =
+                sortDir.equalsIgnoreCase("desc") ? Sort.Direction.DESC : Sort.Direction.ASC;
         Pageable pageable = PageRequest.of(page, size, Sort.by(direction, sortBy));
-        
+
         Page<OrderResponse> ordersPage = orderService.searchOrders(searchTerm, pageable);
-        
-        PaginationResponse<OrderResponse> response = new PaginationResponse<>(
-                ordersPage.getContent(),
-                ordersPage.getNumber(),
-                ordersPage.getSize(),
-                ordersPage.getTotalElements(),
-                ordersPage.getTotalPages(),
-                ordersPage.isFirst(),
-                ordersPage.isLast());
-        
+
+        PaginationResponse<OrderResponse> response =
+                new PaginationResponse<>(
+                        ordersPage.getContent(),
+                        ordersPage.getNumber(),
+                        ordersPage.getSize(),
+                        ordersPage.getTotalElements(),
+                        ordersPage.getTotalPages(),
+                        ordersPage.isFirst(),
+                        ordersPage.isLast());
+
         return ResponseEntity.ok(response);
     }
 
@@ -244,8 +251,9 @@ public class OrderController {
             @RequestParam String paypalPaymentId,
             @RequestParam String paypalPayerId,
             @RequestParam String paypalOrderId) {
-        OrderResponse order = orderService.completePayPalPayment(
-                orderId, paypalPaymentId, paypalPayerId, paypalOrderId);
+        OrderResponse order =
+                orderService.completePayPalPayment(
+                        orderId, paypalPaymentId, paypalPayerId, paypalOrderId);
         return ResponseEntity.ok(order);
     }
 

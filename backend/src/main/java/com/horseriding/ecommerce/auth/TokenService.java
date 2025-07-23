@@ -41,20 +41,18 @@ public class TokenService {
     public TokenPair createTokens(final User user) {
         // Generate access token
         String accessToken = jwtTokenProvider.generateAccessToken(user);
-        
+
         // Generate refresh token
         String refreshTokenString = jwtTokenProvider.generateRefreshToken(user);
-        
+
         // Save refresh token to database
-        RefreshToken refreshToken = new RefreshToken(
-                refreshTokenString,
-                user,
-                jwtTokenProvider.getRefreshTokenExpiration()
-        );
+        RefreshToken refreshToken =
+                new RefreshToken(
+                        refreshTokenString, user, jwtTokenProvider.getRefreshTokenExpiration());
         refreshTokenRepository.save(refreshToken);
-        
+
         log.debug("Created tokens for user: {}", user.getEmail());
-        
+
         return new TokenPair(accessToken, refreshTokenString);
     }
 
@@ -73,8 +71,10 @@ public class TokenService {
         }
 
         // Find refresh token in database
-        RefreshToken refreshToken = refreshTokenRepository.findByToken(refreshTokenString)
-                .orElseThrow(() -> new AuthenticationException("Refresh token not found"));
+        RefreshToken refreshToken =
+                refreshTokenRepository
+                        .findByToken(refreshTokenString)
+                        .orElseThrow(() -> new AuthenticationException("Refresh token not found"));
 
         // Check if refresh token is valid
         if (!refreshToken.isValid()) {
@@ -83,9 +83,9 @@ public class TokenService {
 
         // Generate new access token
         String newAccessToken = jwtTokenProvider.generateAccessToken(refreshToken.getUser());
-        
+
         log.debug("Refreshed access token for user: {}", refreshToken.getUser().getEmail());
-        
+
         return new TokenPair(newAccessToken, refreshTokenString);
     }
 
@@ -96,12 +96,16 @@ public class TokenService {
      */
     @Transactional
     public void revokeRefreshToken(final String refreshTokenString) {
-        refreshTokenRepository.findByToken(refreshTokenString)
-                .ifPresent(refreshToken -> {
-                    refreshToken.revoke();
-                    refreshTokenRepository.save(refreshToken);
-                    log.debug("Revoked refresh token for user: {}", refreshToken.getUser().getEmail());
-                });
+        refreshTokenRepository
+                .findByToken(refreshTokenString)
+                .ifPresent(
+                        refreshToken -> {
+                            refreshToken.revoke();
+                            refreshTokenRepository.save(refreshToken);
+                            log.debug(
+                                    "Revoked refresh token for user: {}",
+                                    refreshToken.getUser().getEmail());
+                        });
     }
 
     /**
@@ -122,8 +126,10 @@ public class TokenService {
      */
     @Transactional
     public void revokeAllUserTokens(final Long userId) {
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
+        User user =
+                userRepository
+                        .findById(userId)
+                        .orElseThrow(() -> new ResourceNotFoundException("User not found"));
         revokeAllUserTokens(user);
     }
 
@@ -160,7 +166,8 @@ public class TokenService {
     public User getUserFromAccessToken(final String accessToken) {
         try {
             String email = jwtTokenProvider.extractUsername(accessToken);
-            return userRepository.findByEmail(email)
+            return userRepository
+                    .findByEmail(email)
                     .orElseThrow(() -> new AuthenticationException("User not found"));
         } catch (Exception e) {
             throw new AuthenticationException("Invalid access token");
@@ -192,17 +199,16 @@ public class TokenService {
         try {
             // Get token expiration from JWT
             Date expiration = jwtTokenProvider.extractExpiration(accessToken);
-            LocalDateTime expiresAt = expiration.toInstant()
-                    .atZone(ZoneId.systemDefault())
-                    .toLocalDateTime();
-            
+            LocalDateTime expiresAt =
+                    expiration.toInstant().atZone(ZoneId.systemDefault()).toLocalDateTime();
+
             // Create hash of the token for storage
             String tokenHash = hashToken(accessToken);
-            
+
             // Save to blacklist
             TokenBlacklist blacklistEntry = new TokenBlacklist(tokenHash, expiresAt);
             tokenBlacklistRepository.save(blacklistEntry);
-            
+
             log.debug("Blacklisted access token");
         } catch (Exception e) {
             log.warn("Failed to blacklist token: {}", e.getMessage());
@@ -237,12 +243,12 @@ public class TokenService {
     public void logout(final String accessToken, final String refreshToken) {
         // Blacklist the access token
         blacklistToken(accessToken);
-        
+
         // Revoke the refresh token if provided
         if (refreshToken != null && !refreshToken.trim().isEmpty()) {
             revokeRefreshToken(refreshToken);
         }
-        
+
         log.debug("User logged out successfully");
     }
 
@@ -278,17 +284,17 @@ public class TokenService {
     @Transactional
     public void cleanupExpiredTokens() {
         LocalDateTime now = LocalDateTime.now();
-        
+
         // Delete expired refresh tokens
         refreshTokenRepository.deleteExpiredTokens(now);
-        
+
         // Delete revoked refresh tokens older than 30 days
         LocalDateTime cutoffDate = now.minusDays(30);
         refreshTokenRepository.deleteRevokedTokensOlderThan(cutoffDate);
-        
+
         // Delete expired blacklist entries
         tokenBlacklistRepository.deleteExpiredEntries(now);
-        
+
         log.debug("Cleaned up expired and old revoked refresh tokens and blacklist entries");
     }
 

@@ -33,8 +33,15 @@ public class PaginationResponse<T> {
         this.last = page >= totalPages - 1;
         this.empty = content == null || content.isEmpty();
     }
-    
-    public PaginationResponse(List<T> content, int page, int size, long totalElements, int totalPages, boolean first, boolean last) {
+
+    public PaginationResponse(
+            List<T> content,
+            int page,
+            int size,
+            long totalElements,
+            int totalPages,
+            boolean first,
+            boolean last) {
         this.content = content;
         this.page = page;
         this.size = size;

@@ -42,7 +42,12 @@ public class AuthResponse {
      * @param role the user role
      * @param expiresIn the access token expiration time in seconds
      */
-    public AuthResponse(String accessToken, String refreshToken, UserProfileResponse user, UserRole role, long expiresIn) {
+    public AuthResponse(
+            String accessToken,
+            String refreshToken,
+            UserProfileResponse user,
+            UserRole role,
+            long expiresIn) {
         this.accessToken = accessToken;
         this.refreshToken = refreshToken;
         this.user = user;

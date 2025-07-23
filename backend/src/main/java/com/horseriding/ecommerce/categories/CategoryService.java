@@ -1,13 +1,10 @@
 package com.horseriding.ecommerce.categories;
 
-import com.horseriding.ecommerce.auth.SecurityUtils;
 import com.horseriding.ecommerce.categories.dtos.requests.CategoryCreateRequest;
 import com.horseriding.ecommerce.categories.dtos.requests.CategoryUpdateRequest;
 import com.horseriding.ecommerce.categories.dtos.responses.CategoryResponse;
 import com.horseriding.ecommerce.categories.dtos.responses.CategoryTreeResponse;
-import com.horseriding.ecommerce.exception.AccessDeniedException;
 import com.horseriding.ecommerce.exception.ResourceNotFoundException;
-import com.horseriding.ecommerce.users.User;
 import com.horseriding.ecommerce.users.UserRepository;
 import java.util.ArrayList;
 import java.util.List;
@@ -52,8 +49,13 @@ public class CategoryService {
 
         // Set parent category if provided
         if (request.getParentId() != null) {
-            Category parent = categoryRepository.findById(request.getParentId())
-                    .orElseThrow(() -> new ResourceNotFoundException("Parent category not found"));
+            Category parent =
+                    categoryRepository
+                            .findById(request.getParentId())
+                            .orElseThrow(
+                                    () ->
+                                            new ResourceNotFoundException(
+                                                    "Parent category not found"));
             category.setParent(parent);
         }
 
@@ -74,10 +76,13 @@ public class CategoryService {
      * @throws IllegalArgumentException if category name already exists for another category
      */
     @Transactional
-    public CategoryResponse updateCategory(final Long categoryId, final CategoryUpdateRequest request) {
+    public CategoryResponse updateCategory(
+            final Long categoryId, final CategoryUpdateRequest request) {
         // Get category to update
-        Category category = categoryRepository.findById(categoryId)
-                .orElseThrow(() -> new ResourceNotFoundException("Category not found"));
+        Category category =
+                categoryRepository
+                        .findById(categoryId)
+                        .orElseThrow(() -> new ResourceNotFoundException("Category not found"));
 
         // Check if name is being changed and if it already exists
         if (!category.getName().equals(request.getName())
@@ -99,11 +104,17 @@ public class CategoryService {
 
             // Prevent circular references
             if (wouldCreateCircularReference(category, request.getParentId())) {
-                throw new IllegalArgumentException("Cannot create circular reference in category hierarchy");
+                throw new IllegalArgumentException(
+                        "Cannot create circular reference in category hierarchy");
             }
 
-            Category parent = categoryRepository.findById(request.getParentId())
-                    .orElseThrow(() -> new ResourceNotFoundException("Parent category not found"));
+            Category parent =
+                    categoryRepository
+                            .findById(request.getParentId())
+                            .orElseThrow(
+                                    () ->
+                                            new ResourceNotFoundException(
+                                                    "Parent category not found"));
             category.setParent(parent);
         } else {
             // If parentId is null, make it a root category
@@ -127,13 +138,16 @@ public class CategoryService {
     @Transactional
     public void deleteCategory(final Long categoryId) {
         // Get category to delete
-        Category category = categoryRepository.findById(categoryId)
-                .orElseThrow(() -> new ResourceNotFoundException("Category not found"));
+        Category category =
+                categoryRepository
+                        .findById(categoryId)
+                        .orElseThrow(() -> new ResourceNotFoundException("Category not found"));
 
         // Check if category has subcategories
         if (category.hasSubcategories()) {
             throw new IllegalArgumentException(
-                    "Cannot delete category with subcategories. Delete subcategories first or reassign them.");
+                    "Cannot delete category with subcategories. Delete subcategories first or"
+                            + " reassign them.");
         }
 
         // Delete category
@@ -148,8 +162,10 @@ public class CategoryService {
      * @throws ResourceNotFoundException if the category is not found
      */
     public CategoryResponse getCategoryById(final Long categoryId) {
-        Category category = categoryRepository.findById(categoryId)
-                .orElseThrow(() -> new ResourceNotFoundException("Category not found"));
+        Category category =
+                categoryRepository
+                        .findById(categoryId)
+                        .orElseThrow(() -> new ResourceNotFoundException("Category not found"));
 
         return mapToCategoryResponse(category);
     }
@@ -174,13 +190,14 @@ public class CategoryService {
      * @throws ResourceNotFoundException if the parent category is not found
      */
     public List<CategoryResponse> getSubcategories(final Long parentId) {
-        Category parent = categoryRepository.findById(parentId)
-                .orElseThrow(() -> new ResourceNotFoundException("Parent category not found"));
+        Category parent =
+                categoryRepository
+                        .findById(parentId)
+                        .orElseThrow(
+                                () -> new ResourceNotFoundException("Parent category not found"));
 
         List<Category> subcategories = categoryRepository.findByParent(parent);
-        return subcategories.stream()
-                .map(this::mapToCategoryResponse)
-                .collect(Collectors.toList());
+        return subcategories.stream().map(this::mapToCategoryResponse).collect(Collectors.toList());
     }
 
     /**
@@ -201,7 +218,8 @@ public class CategoryService {
      * @param pageable pagination information
      * @return page of categories matching the search criteria
      */
-    public Page<CategoryResponse> searchCategories(final String searchTerm, final Pageable pageable) {
+    public Page<CategoryResponse> searchCategories(
+            final String searchTerm, final Pageable pageable) {
         Page<Category> categories = categoryRepository.searchCategories(searchTerm, pageable);
         return categories.map(this::mapToCategoryResponse);
     }
@@ -239,9 +257,10 @@ public class CategoryService {
 
         // Recursively build subcategory trees
         if (category.hasSubcategories()) {
-            List<CategoryTreeResponse> subcategoryTrees = category.getSubcategories().stream()
-                    .map(subcategory -> buildCategoryTree(subcategory, level + 1))
-                    .collect(Collectors.toList());
+            List<CategoryTreeResponse> subcategoryTrees =
+                    category.getSubcategories().stream()
+                            .map(subcategory -> buildCategoryTree(subcategory, level + 1))
+                            .collect(Collectors.toList());
             response.setSubcategories(subcategoryTrees);
         } else {
             response.setSubcategories(new ArrayList<>());
@@ -261,40 +280,45 @@ public class CategoryService {
         response.setId(category.getId());
         response.setName(category.getName());
         response.setDescription(category.getDescription());
-        
+
         if (category.getParent() != null) {
             response.setParentId(category.getParent().getId());
             response.setParentName(category.getParent().getName());
         }
-        
+
         response.setActive(true); // Active status not implemented in entity yet
         response.setDisplayOrder(category.getDisplayOrder());
         response.setCreatedAt(category.getCreatedAt());
         response.setUpdatedAt(category.getUpdatedAt());
-        
+
         // Map subcategories (first level only to avoid deep recursion)
         if (category.hasSubcategories()) {
-            List<CategoryResponse> subcategoryResponses = category.getSubcategories().stream()
-                    .map(subcategory -> {
-                        CategoryResponse subResponse = new CategoryResponse();
-                        subResponse.setId(subcategory.getId());
-                        subResponse.setName(subcategory.getName());
-                        subResponse.setDescription(subcategory.getDescription());
-                        subResponse.setParentId(category.getId());
-                        subResponse.setParentName(category.getName());
-                        subResponse.setActive(true); // Active status not implemented in entity yet
-                        subResponse.setDisplayOrder(subcategory.getDisplayOrder());
-                        subResponse.setCreatedAt(subcategory.getCreatedAt());
-                        subResponse.setUpdatedAt(subcategory.getUpdatedAt());
-                        subResponse.setSubcategories(new ArrayList<>()); // Don't go deeper
-                        return subResponse;
-                    })
-                    .collect(Collectors.toList());
+            List<CategoryResponse> subcategoryResponses =
+                    category.getSubcategories().stream()
+                            .map(
+                                    subcategory -> {
+                                        CategoryResponse subResponse = new CategoryResponse();
+                                        subResponse.setId(subcategory.getId());
+                                        subResponse.setName(subcategory.getName());
+                                        subResponse.setDescription(subcategory.getDescription());
+                                        subResponse.setParentId(category.getId());
+                                        subResponse.setParentName(category.getName());
+                                        subResponse.setActive(
+                                                true); // Active status not implemented in entity
+                                        // yet
+                                        subResponse.setDisplayOrder(subcategory.getDisplayOrder());
+                                        subResponse.setCreatedAt(subcategory.getCreatedAt());
+                                        subResponse.setUpdatedAt(subcategory.getUpdatedAt());
+                                        subResponse.setSubcategories(
+                                                new ArrayList<>()); // Don't go deeper
+                                        return subResponse;
+                                    })
+                            .collect(Collectors.toList());
             response.setSubcategories(subcategoryResponses);
         } else {
             response.setSubcategories(new ArrayList<>());
         }
-        
+
         return response;
     }
 
@@ -312,8 +336,11 @@ public class CategoryService {
         }
 
         // Get the new parent category
-        Category newParent = categoryRepository.findById(newParentId)
-                .orElseThrow(() -> new ResourceNotFoundException("Parent category not found"));
+        Category newParent =
+                categoryRepository
+                        .findById(newParentId)
+                        .orElseThrow(
+                                () -> new ResourceNotFoundException("Parent category not found"));
 
         // Check if the category is in the ancestry of the new parent
         Category ancestor = newParent.getParent();

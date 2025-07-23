@@ -2,16 +2,15 @@ package com.horseriding.ecommerce.auth;
 
 import com.horseriding.ecommerce.users.User;
 import com.horseriding.ecommerce.users.UserRole;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
 import lombok.EqualsAndHashCode;
 import lombok.RequiredArgsConstructor;
 import lombok.ToString;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
-
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
 
 /**
  * UserPrincipal class that wraps the User entity and implements UserDetails.
@@ -23,8 +22,7 @@ import java.util.List;
 @ToString(exclude = "user")
 public class UserPrincipal implements UserDetails {
 
-    @EqualsAndHashCode.Include
-    private final User user;
+    @EqualsAndHashCode.Include private final User user;
 
     /**
      * Creates a UserPrincipal from a User entity.
@@ -129,10 +127,10 @@ public class UserPrincipal implements UserDetails {
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
         List<GrantedAuthority> authorities = new ArrayList<>();
-        
+
         // Add base role
         authorities.add(new SimpleGrantedAuthority("ROLE_" + user.getRole().name()));
-        
+
         // Implement role hierarchy
         if (user.getRole() == UserRole.SUPERADMIN) {
             // SUPERADMIN also has ADMIN role
@@ -143,7 +141,7 @@ public class UserPrincipal implements UserDetails {
             // ADMIN also has CUSTOMER role
             authorities.add(new SimpleGrantedAuthority("ROLE_CUSTOMER"));
         }
-        
+
         return authorities;
     }
 

@@ -50,7 +50,8 @@ public class ProductController {
      */
     @PostMapping
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<ProductDetailResponse> createProduct(@Valid @RequestBody ProductCreateRequest request) {
+    public ResponseEntity<ProductDetailResponse> createProduct(
+            @Valid @RequestBody ProductCreateRequest request) {
         ProductDetailResponse product = productService.createProduct(request);
         return new ResponseEntity<>(product, HttpStatus.CREATED);
     }
@@ -65,8 +66,7 @@ public class ProductController {
     @PutMapping("/{productId}")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<ProductDetailResponse> updateProduct(
-            @PathVariable Long productId,
-            @Valid @RequestBody ProductUpdateRequest request) {
+            @PathVariable Long productId, @Valid @RequestBody ProductUpdateRequest request) {
         ProductDetailResponse product = productService.updateProduct(productId, request);
         return ResponseEntity.ok(product);
     }
@@ -123,21 +123,23 @@ public class ProductController {
             @RequestParam(defaultValue = "10") int size,
             @RequestParam(defaultValue = "id") String sortBy,
             @RequestParam(defaultValue = "asc") String sortDir) {
-        
-        Sort.Direction direction = sortDir.equalsIgnoreCase("desc") ? Sort.Direction.DESC : Sort.Direction.ASC;
+
+        Sort.Direction direction =
+                sortDir.equalsIgnoreCase("desc") ? Sort.Direction.DESC : Sort.Direction.ASC;
         Pageable pageable = PageRequest.of(page, size, Sort.by(direction, sortBy));
-        
+
         Page<ProductResponse> productsPage = productService.getAllProducts(pageable);
-        
-        PaginationResponse<ProductResponse> response = new PaginationResponse<>(
-                productsPage.getContent(),
-                productsPage.getNumber(),
-                productsPage.getSize(),
-                productsPage.getTotalElements(),
-                productsPage.getTotalPages(),
-                productsPage.isFirst(),
-                productsPage.isLast());
-        
+
+        PaginationResponse<ProductResponse> response =
+                new PaginationResponse<>(
+                        productsPage.getContent(),
+                        productsPage.getNumber(),
+                        productsPage.getSize(),
+                        productsPage.getTotalElements(),
+                        productsPage.getTotalPages(),
+                        productsPage.isFirst(),
+                        productsPage.isLast());
+
         return ResponseEntity.ok(response);
     }
 
@@ -158,21 +160,24 @@ public class ProductController {
             @RequestParam(defaultValue = "10") int size,
             @RequestParam(defaultValue = "id") String sortBy,
             @RequestParam(defaultValue = "asc") String sortDir) {
-        
-        Sort.Direction direction = sortDir.equalsIgnoreCase("desc") ? Sort.Direction.DESC : Sort.Direction.ASC;
+
+        Sort.Direction direction =
+                sortDir.equalsIgnoreCase("desc") ? Sort.Direction.DESC : Sort.Direction.ASC;
         Pageable pageable = PageRequest.of(page, size, Sort.by(direction, sortBy));
-        
-        Page<ProductResponse> productsPage = productService.getProductsByCategory(categoryId, pageable);
-        
-        PaginationResponse<ProductResponse> response = new PaginationResponse<>(
-                productsPage.getContent(),
-                productsPage.getNumber(),
-                productsPage.getSize(),
-                productsPage.getTotalElements(),
-                productsPage.getTotalPages(),
-                productsPage.isFirst(),
-                productsPage.isLast());
-        
+
+        Page<ProductResponse> productsPage =
+                productService.getProductsByCategory(categoryId, pageable);
+
+        PaginationResponse<ProductResponse> response =
+                new PaginationResponse<>(
+                        productsPage.getContent(),
+                        productsPage.getNumber(),
+                        productsPage.getSize(),
+                        productsPage.getTotalElements(),
+                        productsPage.getTotalPages(),
+                        productsPage.isFirst(),
+                        productsPage.isLast());
+
         return ResponseEntity.ok(response);
     }
 
@@ -193,21 +198,23 @@ public class ProductController {
             @RequestParam(defaultValue = "10") int size,
             @RequestParam(defaultValue = "id") String sortBy,
             @RequestParam(defaultValue = "asc") String sortDir) {
-        
-        Sort.Direction direction = sortDir.equalsIgnoreCase("desc") ? Sort.Direction.DESC : Sort.Direction.ASC;
+
+        Sort.Direction direction =
+                sortDir.equalsIgnoreCase("desc") ? Sort.Direction.DESC : Sort.Direction.ASC;
         Pageable pageable = PageRequest.of(page, size, Sort.by(direction, sortBy));
-        
+
         Page<ProductResponse> productsPage = productService.getProductsByBrand(brandId, pageable);
-        
-        PaginationResponse<ProductResponse> response = new PaginationResponse<>(
-                productsPage.getContent(),
-                productsPage.getNumber(),
-                productsPage.getSize(),
-                productsPage.getTotalElements(),
-                productsPage.getTotalPages(),
-                productsPage.isFirst(),
-                productsPage.isLast());
-        
+
+        PaginationResponse<ProductResponse> response =
+                new PaginationResponse<>(
+                        productsPage.getContent(),
+                        productsPage.getNumber(),
+                        productsPage.getSize(),
+                        productsPage.getTotalElements(),
+                        productsPage.getTotalPages(),
+                        productsPage.isFirst(),
+                        productsPage.isLast());
+
         return ResponseEntity.ok(response);
     }
 
@@ -228,21 +235,24 @@ public class ProductController {
             @RequestParam(defaultValue = "10") int size,
             @RequestParam(defaultValue = "id") String sortBy,
             @RequestParam(defaultValue = "asc") String sortDir) {
-        
-        Sort.Direction direction = sortDir.equalsIgnoreCase("desc") ? Sort.Direction.DESC : Sort.Direction.ASC;
+
+        Sort.Direction direction =
+                sortDir.equalsIgnoreCase("desc") ? Sort.Direction.DESC : Sort.Direction.ASC;
         Pageable pageable = PageRequest.of(page, size, Sort.by(direction, sortBy));
-        
-        Page<ProductSearchResponse> productsPage = productService.searchProducts(searchTerm, pageable);
-        
-        PaginationResponse<ProductSearchResponse> response = new PaginationResponse<>(
-                productsPage.getContent(),
-                productsPage.getNumber(),
-                productsPage.getSize(),
-                productsPage.getTotalElements(),
-                productsPage.getTotalPages(),
-                productsPage.isFirst(),
-                productsPage.isLast());
-        
+
+        Page<ProductSearchResponse> productsPage =
+                productService.searchProducts(searchTerm, pageable);
+
+        PaginationResponse<ProductSearchResponse> response =
+                new PaginationResponse<>(
+                        productsPage.getContent(),
+                        productsPage.getNumber(),
+                        productsPage.getSize(),
+                        productsPage.getTotalElements(),
+                        productsPage.getTotalPages(),
+                        productsPage.isFirst(),
+                        productsPage.isLast());
+
         return ResponseEntity.ok(response);
     }
 
@@ -256,8 +266,7 @@ public class ProductController {
     @PutMapping("/{productId}/stock")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<ProductDetailResponse> updateProductStock(
-            @PathVariable Long productId,
-            @RequestParam Integer quantity) {
+            @PathVariable Long productId, @RequestParam Integer quantity) {
         ProductDetailResponse product = productService.updateProductStock(productId, quantity);
         return ResponseEntity.ok(product);
     }
@@ -278,21 +287,23 @@ public class ProductController {
             @RequestParam(defaultValue = "10") int size,
             @RequestParam(defaultValue = "stockQuantity") String sortBy,
             @RequestParam(defaultValue = "asc") String sortDir) {
-        
-        Sort.Direction direction = sortDir.equalsIgnoreCase("desc") ? Sort.Direction.DESC : Sort.Direction.ASC;
+
+        Sort.Direction direction =
+                sortDir.equalsIgnoreCase("desc") ? Sort.Direction.DESC : Sort.Direction.ASC;
         Pageable pageable = PageRequest.of(page, size, Sort.by(direction, sortBy));
-        
+
         Page<ProductResponse> productsPage = productService.getLowStockProducts(pageable);
-        
-        PaginationResponse<ProductResponse> response = new PaginationResponse<>(
-                productsPage.getContent(),
-                productsPage.getNumber(),
-                productsPage.getSize(),
-                productsPage.getTotalElements(),
-                productsPage.getTotalPages(),
-                productsPage.isFirst(),
-                productsPage.isLast());
-        
+
+        PaginationResponse<ProductResponse> response =
+                new PaginationResponse<>(
+                        productsPage.getContent(),
+                        productsPage.getNumber(),
+                        productsPage.getSize(),
+                        productsPage.getTotalElements(),
+                        productsPage.getTotalPages(),
+                        productsPage.isFirst(),
+                        productsPage.isLast());
+
         return ResponseEntity.ok(response);
     }
 
@@ -312,21 +323,23 @@ public class ProductController {
             @RequestParam(defaultValue = "10") int size,
             @RequestParam(defaultValue = "id") String sortBy,
             @RequestParam(defaultValue = "asc") String sortDir) {
-        
-        Sort.Direction direction = sortDir.equalsIgnoreCase("desc") ? Sort.Direction.DESC : Sort.Direction.ASC;
+
+        Sort.Direction direction =
+                sortDir.equalsIgnoreCase("desc") ? Sort.Direction.DESC : Sort.Direction.ASC;
         Pageable pageable = PageRequest.of(page, size, Sort.by(direction, sortBy));
-        
+
         Page<ProductResponse> productsPage = productService.getOutOfStockProducts(pageable);
-        
-        PaginationResponse<ProductResponse> response = new PaginationResponse<>(
-                productsPage.getContent(),
-                productsPage.getNumber(),
-                productsPage.getSize(),
-                productsPage.getTotalElements(),
-                productsPage.getTotalPages(),
-                productsPage.isFirst(),
-                productsPage.isLast());
-        
+
+        PaginationResponse<ProductResponse> response =
+                new PaginationResponse<>(
+                        productsPage.getContent(),
+                        productsPage.getNumber(),
+                        productsPage.getSize(),
+                        productsPage.getTotalElements(),
+                        productsPage.getTotalPages(),
+                        productsPage.isFirst(),
+                        productsPage.isLast());
+
         return ResponseEntity.ok(response);
     }
 
@@ -341,8 +354,8 @@ public class ProductController {
     @PostMapping(value = "/{productId}/images", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<String> uploadProductImage(
-            @PathVariable Long productId,
-            @RequestPart("file") MultipartFile file) throws IOException {
+            @PathVariable Long productId, @RequestPart("file") MultipartFile file)
+            throws IOException {
         String imageUrl = productService.uploadProductImage(productId, file);
         return ResponseEntity.ok(imageUrl);
     }
@@ -357,8 +370,7 @@ public class ProductController {
     @DeleteMapping("/{productId}/images")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<SuccessResponse<Void>> removeProductImage(
-            @PathVariable Long productId,
-            @RequestParam String imageUrl) {
+            @PathVariable Long productId, @RequestParam String imageUrl) {
         productService.removeProductImage(productId, imageUrl);
         return ResponseEntity.ok(new SuccessResponse<>("Image removed successfully", 200));
     }

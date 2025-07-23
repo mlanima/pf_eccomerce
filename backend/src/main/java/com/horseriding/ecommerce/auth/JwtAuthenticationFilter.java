@@ -1,6 +1,5 @@
 package com.horseriding.ecommerce.auth;
 
-import com.horseriding.ecommerce.users.User;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -44,7 +43,8 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     protected void doFilterInternal(
             @NonNull HttpServletRequest request,
             @NonNull HttpServletResponse response,
-            @NonNull FilterChain filterChain) throws ServletException, IOException {
+            @NonNull FilterChain filterChain)
+            throws ServletException, IOException {
 
         try {
             // Extract JWT token from Authorization header
@@ -62,17 +62,17 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                         UserDetails userDetails = userDetailsService.loadUserByUsername(username);
 
                         // Validate token against user
-                        if (userDetails instanceof UserPrincipal && 
-                            jwtTokenProvider.validateAccessToken(jwt, ((UserPrincipal) userDetails).getUser())) {
+                        if (userDetails instanceof UserPrincipal
+                                && jwtTokenProvider.validateAccessToken(
+                                        jwt, ((UserPrincipal) userDetails).getUser())) {
                             // Create authentication token
                             UsernamePasswordAuthenticationToken authentication =
                                     new UsernamePasswordAuthenticationToken(
-                                            userDetails,
-                                            null,
-                                            userDetails.getAuthorities());
+                                            userDetails, null, userDetails.getAuthorities());
 
                             // Set authentication details
-                            authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+                            authentication.setDetails(
+                                    new WebAuthenticationDetailsSource().buildDetails(request));
 
                             // Set authentication in security context
                             SecurityContextHolder.getContext().setAuthentication(authentication);
@@ -108,15 +108,15 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     @Override
     protected boolean shouldNotFilter(HttpServletRequest request) {
         String path = request.getRequestURI();
-        
+
         // Skip authentication for public endpoints
-        return path.startsWith("/api/auth/") ||
-               path.startsWith("/api/public/") ||
-               path.startsWith("/actuator/") ||
-               path.startsWith("/swagger-ui/") ||
-               path.startsWith("/v3/api-docs/") ||
-               path.equals("/favicon.ico") ||
-               path.equals("/error");
+        return path.startsWith("/api/auth/")
+                || path.startsWith("/api/public/")
+                || path.startsWith("/actuator/")
+                || path.startsWith("/swagger-ui/")
+                || path.startsWith("/v3/api-docs/")
+                || path.equals("/favicon.ico")
+                || path.equals("/error");
     }
 
     /**
