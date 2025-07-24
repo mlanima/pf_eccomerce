@@ -3,6 +3,7 @@ package com.horseriding.ecommerce.users.dtos.requests;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
@@ -11,6 +12,7 @@ import lombok.NoArgsConstructor;
  * Contains email and password validation.
  */
 @Data
+@Builder
 @NoArgsConstructor
 @AllArgsConstructor
 public final class UserLoginRequest {

@@ -45,7 +45,6 @@ public class AuthController {
     @PostMapping("/register")
     public ResponseEntity<UserProfileResponse> register(
             @Valid @RequestBody UserRegistrationRequest request) {
-        System.out.println("Hi there!!!");
         UserProfileResponse response = userService.registerUser(request);
         return new ResponseEntity<>(response, HttpStatus.CREATED);
     }

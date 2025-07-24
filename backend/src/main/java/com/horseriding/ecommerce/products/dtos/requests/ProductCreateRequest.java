@@ -5,6 +5,7 @@ import java.math.BigDecimal;
 import java.util.List;
 import java.util.Map;
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
@@ -12,6 +13,7 @@ import lombok.NoArgsConstructor;
  * DTO for product creation requests with validation for admin operations.
  */
 @Data
+@Builder
 @NoArgsConstructor
 @AllArgsConstructor
 public class ProductCreateRequest {
@@ -43,8 +45,6 @@ public class ProductCreateRequest {
     private List<String> imageUrls;
 
     private Map<String, String> specifications;
-
-    private boolean active = true;
 
     private boolean featured = false;
 

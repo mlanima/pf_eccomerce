@@ -44,8 +44,6 @@ public class ProductUpdateRequest {
 
     private Map<String, String> specifications;
 
-    private boolean active;
-
     private boolean featured;
 
     @DecimalMin(value = "0.0", message = "Weight cannot be negative")

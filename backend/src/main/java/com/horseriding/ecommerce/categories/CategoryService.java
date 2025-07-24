@@ -143,8 +143,9 @@ public class CategoryService {
                         .findById(categoryId)
                         .orElseThrow(() -> new ResourceNotFoundException("Category not found"));
 
-        // Check if category has subcategories
-        if (category.hasSubcategories()) {
+        // Check if category has subcategories using repository query
+        List<Category> subcategories = categoryRepository.findByParent(category);
+        if (!subcategories.isEmpty()) {
             throw new IllegalArgumentException(
                     "Cannot delete category with subcategories. Delete subcategories first or"
                             + " reassign them.");
