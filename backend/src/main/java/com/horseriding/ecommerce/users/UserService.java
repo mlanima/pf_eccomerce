@@ -119,10 +119,19 @@ public class UserService {
      * @param request the update request
      * @return the updated user profile
      * @throws IllegalStateException if no user is authenticated
+     * @throws IllegalArgumentException if email is already in use by another user
      */
     @Transactional
     public UserProfileResponse updateCurrentUserProfile(final UserUpdateRequest request) {
         User currentUser = SecurityUtils.getCurrentUser();
+
+        // Check if email is being changed and if it's already in use by another user
+        if (!currentUser.getEmail().equals(request.getEmail())) {
+            if (userRepository.existsByEmail(request.getEmail())) {
+                throw new IllegalArgumentException("Email is already in use");
+            }
+            currentUser.setEmail(request.getEmail());
+        }
 
         // Update user fields
         currentUser.setFirstName(request.getFirstName());
@@ -210,43 +219,6 @@ public class UserService {
 
         // Delete admin user
         userRepository.delete(adminUser);
-    }
-
-    /**
-     * Updates an admin user's role.
-     *
-     * @param adminUserId the ID of the admin user to update
-     * @param newRole the new role for the admin user
-     * @return the updated admin user
-     * @throws ResourceNotFoundException if the admin user is not found
-     * @throws IllegalArgumentException if trying to update a superadmin or set an invalid role
-     */
-    @Transactional
-    public UserResponse updateAdminUserRole(final Long adminUserId, final UserRole newRole) {
-        User currentUser = SecurityUtils.getCurrentUser();
-
-        // Get admin user to update
-        User adminUser =
-                userRepository
-                        .findById(adminUserId)
-                        .orElseThrow(() -> new ResourceNotFoundException("Admin user not found"));
-
-        // Check if admin user is a superadmin
-        if (adminUser.isSuperAdmin() && !adminUser.getId().equals(currentUser.getId())) {
-            throw new IllegalArgumentException("Cannot update other superadmin users");
-        }
-
-        // Check if new role is CUSTOMER
-        if (newRole == UserRole.CUSTOMER) {
-            throw new IllegalArgumentException("Cannot downgrade admin to customer");
-        }
-
-        // Update admin user role
-        adminUser.setRole(newRole);
-        User updatedUser = userRepository.save(adminUser);
-
-        // Return updated user
-        return mapToUserResponse(updatedUser);
     }
 
     /**

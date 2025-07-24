@@ -1,5 +1,8 @@
 package com.horseriding.ecommerce.products;
 
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.horseriding.ecommerce.categories.Category;
 import com.horseriding.ecommerce.categories.CategoryRepository;
@@ -8,6 +11,7 @@ import com.horseriding.ecommerce.products.dtos.requests.ProductUpdateRequest;
 import com.horseriding.ecommerce.users.User;
 import com.horseriding.ecommerce.users.UserRepository;
 import com.horseriding.ecommerce.users.UserRole;
+import java.math.BigDecimal;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -19,40 +23,27 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.math.BigDecimal;
-import java.util.List;
-import java.util.Map;
-
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
-
 /**
  * Integration tests for ProductController.
  * Tests the complete request-response cycle for product endpoints.
  */
 @SpringBootTest
 @AutoConfigureMockMvc
-@Transactional  // Auto-rollback after each test
+@Transactional // Auto-rollback after each test
 @ActiveProfiles("test")
 class ProductControllerIntegrationTest {
 
-    @Autowired
-    private MockMvc mockMvc;
+    @Autowired private MockMvc mockMvc;
 
-    @Autowired
-    private ObjectMapper objectMapper;
+    @Autowired private ObjectMapper objectMapper;
 
-    @Autowired
-    private ProductRepository productRepository;
+    @Autowired private ProductRepository productRepository;
 
-    @Autowired
-    private CategoryRepository categoryRepository;
+    @Autowired private CategoryRepository categoryRepository;
 
-    @Autowired
-    private UserRepository userRepository;
+    @Autowired private UserRepository userRepository;
 
-    @Autowired
-    private PasswordEncoder passwordEncoder;
+    @Autowired private PasswordEncoder passwordEncoder;
 
     // Helper method to create test category
     private Category createTestCategory(String name, String description) {
@@ -96,11 +87,12 @@ class ProductControllerIntegrationTest {
         createTestProduct("Product 3", new BigDecimal("199.99"), category);
 
         // When & Then
-        mockMvc.perform(get("/api/products")
-                .param("page", "0")
-                .param("size", "2")
-                .param("sortBy", "name")
-                .param("sortDir", "asc"))
+        mockMvc.perform(
+                        get("/api/products")
+                                .param("page", "0")
+                                .param("size", "2")
+                                .param("sortBy", "name")
+                                .param("sortDir", "asc"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.content").isArray())
                 .andExpect(jsonPath("$.content.length()").value(2))
@@ -123,10 +115,11 @@ class ProductControllerIntegrationTest {
         createTestProduct("Riding Boots", new BigDecimal("149.99"), category);
 
         // When & Then - Search for products containing "Horse"
-        mockMvc.perform(get("/api/products/search")
-                .param("searchTerm", "Horse")
-                .param("page", "0")
-                .param("size", "10"))
+        mockMvc.perform(
+                        get("/api/products/search")
+                                .param("searchTerm", "Horse")
+                                .param("page", "0")
+                                .param("size", "10"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.content").isArray())
                 .andExpect(jsonPath("$.content.length()").value(2))
@@ -139,15 +132,16 @@ class ProductControllerIntegrationTest {
         // Given - Create test data
         Category saddleCategory = createTestCategory("Saddles", "Horse saddles");
         Category bridleCategory = createTestCategory("Bridles", "Horse bridles");
-        
+
         createTestProduct("English Saddle", new BigDecimal("599.99"), saddleCategory);
         createTestProduct("Western Saddle", new BigDecimal("699.99"), saddleCategory);
         createTestProduct("Leather Bridle", new BigDecimal("149.99"), bridleCategory);
 
         // When & Then - Get products by saddle category
-        mockMvc.perform(get("/api/products/category/{categoryId}", saddleCategory.getId())
-                .param("page", "0")
-                .param("size", "10"))
+        mockMvc.perform(
+                        get("/api/products/category/{categoryId}", saddleCategory.getId())
+                                .param("page", "0")
+                                .param("size", "10"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.content").isArray())
                 .andExpect(jsonPath("$.content.length()").value(2))
@@ -163,13 +157,15 @@ class ProductControllerIntegrationTest {
         createTestProduct("Medium Product", new BigDecimal("150.00"), category);
         createTestProduct("Expensive Product", new BigDecimal("500.00"), category);
 
-        // When & Then - Search with price range filter (this would be implemented in search endpoint)
-        // Note: The current search endpoint doesn't support price filtering, 
+        // When & Then - Search with price range filter (this would be implemented in search
+        // endpoint)
+        // Note: The current search endpoint doesn't support price filtering,
         // but we test the basic search functionality
-        mockMvc.perform(get("/api/products/search")
-                .param("searchTerm", "Product")
-                .param("page", "0")
-                .param("size", "10"))
+        mockMvc.perform(
+                        get("/api/products/search")
+                                .param("searchTerm", "Product")
+                                .param("page", "0")
+                                .param("size", "10"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.content").isArray())
                 .andExpect(jsonPath("$.content.length()").value(3));
@@ -233,10 +229,11 @@ class ProductControllerIntegrationTest {
         // Given - No products created
 
         // When & Then
-        mockMvc.perform(get("/api/products/search")
-                .param("searchTerm", "NonExistentProduct")
-                .param("page", "0")
-                .param("size", "10"))
+        mockMvc.perform(
+                        get("/api/products/search")
+                                .param("searchTerm", "NonExistentProduct")
+                                .param("page", "0")
+                                .param("size", "10"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.content").isArray())
                 .andExpect(jsonPath("$.content.length()").value(0))
@@ -252,9 +249,7 @@ class ProductControllerIntegrationTest {
         }
 
         // When & Then - Test first page
-        mockMvc.perform(get("/api/products")
-                .param("page", "0")
-                .param("size", "5"))
+        mockMvc.perform(get("/api/products").param("page", "0").param("size", "5"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.content.length()").value(5))
                 .andExpect(jsonPath("$.page").value(0))
@@ -264,9 +259,7 @@ class ProductControllerIntegrationTest {
                 .andExpect(jsonPath("$.last").value(false));
 
         // Test last page
-        mockMvc.perform(get("/api/products")
-                .param("page", "2")
-                .param("size", "5"))
+        mockMvc.perform(get("/api/products").param("page", "2").param("size", "5"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.content.length()").value(5))
                 .andExpect(jsonPath("$.page").value(2))
@@ -282,24 +275,26 @@ class ProductControllerIntegrationTest {
         // Given - Create test category
         Category category = createTestCategory("Test Category", "Test category description");
 
-        ProductCreateRequest request = ProductCreateRequest.builder()
-                .name("New Horse Saddle")
-                .description("High-quality leather horse saddle")
-                .price(new BigDecimal("599.99"))
-                .stockQuantity(5)
-                .lowStockThreshold(2)
-                .categoryId(category.getId())
-                .featured(true)
-                .weightKg(new BigDecimal("15.5"))
-                .dimensions("45x30x25 cm")
-                .model("Professional Series")
-                .sku("SADDLE-001")
-                .build();
+        ProductCreateRequest request =
+                ProductCreateRequest.builder()
+                        .name("New Horse Saddle")
+                        .description("High-quality leather horse saddle")
+                        .price(new BigDecimal("599.99"))
+                        .stockQuantity(5)
+                        .lowStockThreshold(2)
+                        .categoryId(category.getId())
+                        .featured(true)
+                        .weightKg(new BigDecimal("15.5"))
+                        .dimensions("45x30x25 cm")
+                        .model("Professional Series")
+                        .sku("SADDLE-001")
+                        .build();
 
         // When & Then
-        mockMvc.perform(post("/api/products")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(request)))
+        mockMvc.perform(
+                        post("/api/products")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.name").value("New Horse Saddle"))
                 .andExpect(jsonPath("$.description").value("High-quality leather horse saddle"))
@@ -320,18 +315,20 @@ class ProductControllerIntegrationTest {
         // Given - Create test category
         Category category = createTestCategory("Test Category", "Test category description");
 
-        ProductCreateRequest request = ProductCreateRequest.builder()
-                .name("New Product")
-                .description("Test product")
-                .price(new BigDecimal("99.99"))
-                .stockQuantity(10)
-                .categoryId(category.getId())
-                .build();
+        ProductCreateRequest request =
+                ProductCreateRequest.builder()
+                        .name("New Product")
+                        .description("Test product")
+                        .price(new BigDecimal("99.99"))
+                        .stockQuantity(10)
+                        .categoryId(category.getId())
+                        .build();
 
         // When & Then
-        mockMvc.perform(post("/api/products")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(request)))
+        mockMvc.perform(
+                        post("/api/products")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isForbidden());
     }
 
@@ -340,18 +337,20 @@ class ProductControllerIntegrationTest {
         // Given - Create test category
         Category category = createTestCategory("Test Category", "Test category description");
 
-        ProductCreateRequest request = ProductCreateRequest.builder()
-                .name("New Product")
-                .description("Test product")
-                .price(new BigDecimal("99.99"))
-                .stockQuantity(10)
-                .categoryId(category.getId())
-                .build();
+        ProductCreateRequest request =
+                ProductCreateRequest.builder()
+                        .name("New Product")
+                        .description("Test product")
+                        .price(new BigDecimal("99.99"))
+                        .stockQuantity(10)
+                        .categoryId(category.getId())
+                        .build();
 
         // When & Then
-        mockMvc.perform(post("/api/products")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(request)))
+        mockMvc.perform(
+                        post("/api/products")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isUnauthorized());
     }
 
@@ -375,9 +374,10 @@ class ProductControllerIntegrationTest {
         request.setModel("Updated Model");
 
         // When & Then
-        mockMvc.perform(put("/api/products/{productId}", product.getId())
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(request)))
+        mockMvc.perform(
+                        put("/api/products/{productId}", product.getId())
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.name").value("Updated Product Name"))
                 .andExpect(jsonPath("$.description").value("Updated product description"))
@@ -405,9 +405,10 @@ class ProductControllerIntegrationTest {
         request.setCategoryId(category.getId());
 
         // When & Then
-        mockMvc.perform(put("/api/products/{productId}", product.getId())
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(request)))
+        mockMvc.perform(
+                        put("/api/products/{productId}", product.getId())
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isForbidden());
     }
 
@@ -416,7 +417,8 @@ class ProductControllerIntegrationTest {
     void shouldDeleteProductAsAdmin() throws Exception {
         // Given - Create test product
         Category category = createTestCategory("Test Category", "Test category description");
-        Product product = createTestProduct("Product to Delete", new BigDecimal("199.99"), category);
+        Product product =
+                createTestProduct("Product to Delete", new BigDecimal("199.99"), category);
 
         // When & Then
         mockMvc.perform(delete("/api/products/{productId}", product.getId()))
@@ -460,8 +462,9 @@ class ProductControllerIntegrationTest {
         Product product = createTestProduct("Test Product", new BigDecimal("199.99"), category);
 
         // When & Then
-        mockMvc.perform(put("/api/products/{productId}/stock", product.getId())
-                .param("quantity", "25"))
+        mockMvc.perform(
+                        put("/api/products/{productId}/stock", product.getId())
+                                .param("quantity", "25"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.stockQuantity").value(25));
     }
@@ -474,8 +477,9 @@ class ProductControllerIntegrationTest {
         Product product = createTestProduct("Test Product", new BigDecimal("199.99"), category);
 
         // When & Then
-        mockMvc.perform(put("/api/products/{productId}/stock", product.getId())
-                .param("quantity", "25"))
+        mockMvc.perform(
+                        put("/api/products/{productId}/stock", product.getId())
+                                .param("quantity", "25"))
                 .andExpect(status().isForbidden());
     }
 
@@ -489,9 +493,10 @@ class ProductControllerIntegrationTest {
         // Missing name, price, categoryId
 
         // When & Then
-        mockMvc.perform(post("/api/products")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(request)))
+        mockMvc.perform(
+                        post("/api/products")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isBadRequest());
     }
 
@@ -502,45 +507,51 @@ class ProductControllerIntegrationTest {
         Category category = createTestCategory("Test Category", "Test category description");
 
         // Test negative price
-        ProductCreateRequest request1 = ProductCreateRequest.builder()
-                .name("Test Product")
-                .description("Test description")
-                .price(new BigDecimal("-10.00"))  // Invalid negative price
-                .stockQuantity(10)
-                .categoryId(category.getId())
-                .build();
+        ProductCreateRequest request1 =
+                ProductCreateRequest.builder()
+                        .name("Test Product")
+                        .description("Test description")
+                        .price(new BigDecimal("-10.00")) // Invalid negative price
+                        .stockQuantity(10)
+                        .categoryId(category.getId())
+                        .build();
 
-        mockMvc.perform(post("/api/products")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(request1)))
+        mockMvc.perform(
+                        post("/api/products")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(objectMapper.writeValueAsString(request1)))
                 .andExpect(status().isBadRequest());
 
         // Test zero price
-        ProductCreateRequest request2 = ProductCreateRequest.builder()
-                .name("Test Product")
-                .description("Test description")
-                .price(new BigDecimal("0.00"))  // Invalid zero price
-                .stockQuantity(10)
-                .categoryId(category.getId())
-                .build();
+        ProductCreateRequest request2 =
+                ProductCreateRequest.builder()
+                        .name("Test Product")
+                        .description("Test description")
+                        .price(new BigDecimal("0.00")) // Invalid zero price
+                        .stockQuantity(10)
+                        .categoryId(category.getId())
+                        .build();
 
-        mockMvc.perform(post("/api/products")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(request2)))
+        mockMvc.perform(
+                        post("/api/products")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(objectMapper.writeValueAsString(request2)))
                 .andExpect(status().isBadRequest());
 
         // Test price with too many decimal places
-        ProductCreateRequest request3 = ProductCreateRequest.builder()
-                .name("Test Product")
-                .description("Test description")
-                .price(new BigDecimal("99.999"))  // Invalid - too many decimal places
-                .stockQuantity(10)
-                .categoryId(category.getId())
-                .build();
+        ProductCreateRequest request3 =
+                ProductCreateRequest.builder()
+                        .name("Test Product")
+                        .description("Test description")
+                        .price(new BigDecimal("99.999")) // Invalid - too many decimal places
+                        .stockQuantity(10)
+                        .categoryId(category.getId())
+                        .build();
 
-        mockMvc.perform(post("/api/products")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(request3)))
+        mockMvc.perform(
+                        post("/api/products")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(objectMapper.writeValueAsString(request3)))
                 .andExpect(status().isBadRequest());
     }
 
@@ -550,18 +561,20 @@ class ProductControllerIntegrationTest {
         // Given - Create test category
         Category category = createTestCategory("Test Category", "Test category description");
 
-        ProductCreateRequest request = ProductCreateRequest.builder()
-                .name("Test Product")
-                .description("Test description")
-                .price(new BigDecimal("99.99"))
-                .stockQuantity(-5)  // Invalid negative stock quantity
-                .categoryId(category.getId())
-                .build();
+        ProductCreateRequest request =
+                ProductCreateRequest.builder()
+                        .name("Test Product")
+                        .description("Test description")
+                        .price(new BigDecimal("99.99"))
+                        .stockQuantity(-5) // Invalid negative stock quantity
+                        .categoryId(category.getId())
+                        .build();
 
         // When & Then
-        mockMvc.perform(post("/api/products")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(request)))
+        mockMvc.perform(
+                        post("/api/products")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isBadRequest());
     }
 
@@ -571,18 +584,20 @@ class ProductControllerIntegrationTest {
         // Given - Non-existent category ID
         Long nonExistentCategoryId = 999999L;
 
-        ProductCreateRequest request = ProductCreateRequest.builder()
-                .name("Test Product")
-                .description("Test description")
-                .price(new BigDecimal("99.99"))
-                .stockQuantity(10)
-                .categoryId(nonExistentCategoryId)  // Non-existent category
-                .build();
+        ProductCreateRequest request =
+                ProductCreateRequest.builder()
+                        .name("Test Product")
+                        .description("Test description")
+                        .price(new BigDecimal("99.99"))
+                        .stockQuantity(10)
+                        .categoryId(nonExistentCategoryId) // Non-existent category
+                        .build();
 
         // When & Then
-        mockMvc.perform(post("/api/products")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(request)))
+        mockMvc.perform(
+                        post("/api/products")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isNotFound());
     }
 
@@ -597,13 +612,14 @@ class ProductControllerIntegrationTest {
         ProductUpdateRequest request1 = new ProductUpdateRequest();
         request1.setName("Updated Product");
         request1.setDescription("Updated description");
-        request1.setPrice(new BigDecimal("-50.00"));  // Invalid negative price
+        request1.setPrice(new BigDecimal("-50.00")); // Invalid negative price
         request1.setStockQuantity(10);
         request1.setCategoryId(category.getId());
 
-        mockMvc.perform(put("/api/products/{productId}", product.getId())
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(request1)))
+        mockMvc.perform(
+                        put("/api/products/{productId}", product.getId())
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(objectMapper.writeValueAsString(request1)))
                 .andExpect(status().isBadRequest());
 
         // Test update with invalid stock quantity
@@ -611,12 +627,13 @@ class ProductControllerIntegrationTest {
         request2.setName("Updated Product");
         request2.setDescription("Updated description");
         request2.setPrice(new BigDecimal("199.99"));
-        request2.setStockQuantity(-10);  // Invalid negative stock
+        request2.setStockQuantity(-10); // Invalid negative stock
         request2.setCategoryId(category.getId());
 
-        mockMvc.perform(put("/api/products/{productId}", product.getId())
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(request2)))
+        mockMvc.perform(
+                        put("/api/products/{productId}", product.getId())
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(objectMapper.writeValueAsString(request2)))
                 .andExpect(status().isBadRequest());
     }
 
@@ -627,33 +644,37 @@ class ProductControllerIntegrationTest {
         Category category = createTestCategory("Test Category", "Test category description");
 
         // Test with name exceeding maximum length
-        String longName = "A".repeat(201);  // Exceeds 200 character limit
-        ProductCreateRequest request1 = ProductCreateRequest.builder()
-                .name(longName)
-                .description("Test description")
-                .price(new BigDecimal("99.99"))
-                .stockQuantity(10)
-                .categoryId(category.getId())
-                .build();
+        String longName = "A".repeat(201); // Exceeds 200 character limit
+        ProductCreateRequest request1 =
+                ProductCreateRequest.builder()
+                        .name(longName)
+                        .description("Test description")
+                        .price(new BigDecimal("99.99"))
+                        .stockQuantity(10)
+                        .categoryId(category.getId())
+                        .build();
 
-        mockMvc.perform(post("/api/products")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(request1)))
+        mockMvc.perform(
+                        post("/api/products")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(objectMapper.writeValueAsString(request1)))
                 .andExpect(status().isBadRequest());
 
         // Test with description exceeding maximum length
-        String longDescription = "A".repeat(2001);  // Exceeds 2000 character limit
-        ProductCreateRequest request2 = ProductCreateRequest.builder()
-                .name("Test Product")
-                .description(longDescription)
-                .price(new BigDecimal("99.99"))
-                .stockQuantity(10)
-                .categoryId(category.getId())
-                .build();
+        String longDescription = "A".repeat(2001); // Exceeds 2000 character limit
+        ProductCreateRequest request2 =
+                ProductCreateRequest.builder()
+                        .name("Test Product")
+                        .description(longDescription)
+                        .price(new BigDecimal("99.99"))
+                        .stockQuantity(10)
+                        .categoryId(category.getId())
+                        .build();
 
-        mockMvc.perform(post("/api/products")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(request2)))
+        mockMvc.perform(
+                        post("/api/products")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(objectMapper.writeValueAsString(request2)))
                 .andExpect(status().isBadRequest());
     }
 
@@ -664,20 +685,22 @@ class ProductControllerIntegrationTest {
         Category category = createTestCategory("Test Category", "Test category description");
 
         // Test with SKU exceeding maximum length
-        String longSku = "A".repeat(51);  // Exceeds 50 character limit
-        ProductCreateRequest request = ProductCreateRequest.builder()
-                .name("Test Product")
-                .description("Test description")
-                .price(new BigDecimal("99.99"))
-                .stockQuantity(10)
-                .categoryId(category.getId())
-                .sku(longSku)
-                .build();
+        String longSku = "A".repeat(51); // Exceeds 50 character limit
+        ProductCreateRequest request =
+                ProductCreateRequest.builder()
+                        .name("Test Product")
+                        .description("Test description")
+                        .price(new BigDecimal("99.99"))
+                        .stockQuantity(10)
+                        .categoryId(category.getId())
+                        .sku(longSku)
+                        .build();
 
         // When & Then
-        mockMvc.perform(post("/api/products")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(request)))
+        mockMvc.perform(
+                        post("/api/products")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isBadRequest());
     }
 
@@ -687,25 +710,28 @@ class ProductControllerIntegrationTest {
         // Given - Create test category and product with SKU
         Category category = createTestCategory("Test Category", "Test category description");
         String existingSku = "EXISTING-SKU-123";
-        
-        Product existingProduct = createTestProduct("Existing Product", new BigDecimal("199.99"), category);
+
+        Product existingProduct =
+                createTestProduct("Existing Product", new BigDecimal("199.99"), category);
         existingProduct.setSku(existingSku);
         productRepository.save(existingProduct);
 
         // Try to create another product with the same SKU
-        ProductCreateRequest request = ProductCreateRequest.builder()
-                .name("New Product")
-                .description("Test description")
-                .price(new BigDecimal("99.99"))
-                .stockQuantity(10)
-                .categoryId(category.getId())
-                .sku(existingSku)  // Duplicate SKU
-                .build();
+        ProductCreateRequest request =
+                ProductCreateRequest.builder()
+                        .name("New Product")
+                        .description("Test description")
+                        .price(new BigDecimal("99.99"))
+                        .stockQuantity(10)
+                        .categoryId(category.getId())
+                        .sku(existingSku) // Duplicate SKU
+                        .build();
 
         // When & Then
-        mockMvc.perform(post("/api/products")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(request)))
+        mockMvc.perform(
+                        post("/api/products")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isBadRequest());
     }
 
@@ -715,19 +741,21 @@ class ProductControllerIntegrationTest {
         // Given - Create test category
         Category category = createTestCategory("Test Category", "Test category description");
 
-        ProductCreateRequest request = ProductCreateRequest.builder()
-                .name("Test Product")
-                .description("Test description")
-                .price(new BigDecimal("99.99"))
-                .stockQuantity(10)
-                .categoryId(category.getId())
-                .weightKg(new BigDecimal("-5.0"))  // Invalid negative weight
-                .build();
+        ProductCreateRequest request =
+                ProductCreateRequest.builder()
+                        .name("Test Product")
+                        .description("Test description")
+                        .price(new BigDecimal("99.99"))
+                        .stockQuantity(10)
+                        .categoryId(category.getId())
+                        .weightKg(new BigDecimal("-5.0")) // Invalid negative weight
+                        .build();
 
         // When & Then
-        mockMvc.perform(post("/api/products")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(request)))
+        mockMvc.perform(
+                        post("/api/products")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isBadRequest());
     }
 
@@ -737,19 +765,21 @@ class ProductControllerIntegrationTest {
         // Given - Create test category
         Category category = createTestCategory("Test Category", "Test category description");
 
-        ProductCreateRequest request = ProductCreateRequest.builder()
-                .name("Test Product")
-                .description("Test description")
-                .price(new BigDecimal("99.99"))
-                .stockQuantity(10)
-                .categoryId(category.getId())
-                .lowStockThreshold(-1)  // Invalid negative threshold
-                .build();
+        ProductCreateRequest request =
+                ProductCreateRequest.builder()
+                        .name("Test Product")
+                        .description("Test description")
+                        .price(new BigDecimal("99.99"))
+                        .stockQuantity(10)
+                        .categoryId(category.getId())
+                        .lowStockThreshold(-1) // Invalid negative threshold
+                        .build();
 
         // When & Then
-        mockMvc.perform(post("/api/products")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(request)))
+        mockMvc.perform(
+                        post("/api/products")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isBadRequest());
     }
 
@@ -768,9 +798,10 @@ class ProductControllerIntegrationTest {
         request.setCategoryId(category.getId());
 
         // When & Then
-        mockMvc.perform(put("/api/products/{productId}", nonExistentProductId)
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(request)))
+        mockMvc.perform(
+                        put("/api/products/{productId}", nonExistentProductId)
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isNotFound());
     }
 }

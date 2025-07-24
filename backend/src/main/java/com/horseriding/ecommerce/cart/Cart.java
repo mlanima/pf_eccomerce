@@ -48,6 +48,7 @@ public class Cart {
             cascade = CascadeType.ALL,
             fetch = FetchType.LAZY,
             orphanRemoval = true)
+    @Builder.Default
     private List<CartItem> items = new ArrayList<>();
 
     @Column(name = "session_id")

@@ -10,12 +10,16 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.converter.HttpMessageNotReadableException;
+import org.springframework.util.MimeType;
 import org.springframework.validation.BindException;
+import org.springframework.web.HttpMediaTypeNotSupportedException;
 import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.context.request.WebRequest;
+import org.springframework.web.servlet.resource.NoResourceFoundException;
 
 /**
  * Global exception handler for consistent error responses across the application.
@@ -92,20 +96,78 @@ public final class GlobalExceptionHandler {
     }
 
     /**
+     * Handle invalid json structure exception.
+     *
+     * @param ex the exception
+     * @param request the web request
+     * @return API error response
+     */
+    @ExceptionHandler(HttpMessageNotReadableException.class)
+    public ResponseEntity<ApiErrorResponse> handleHttpMessageNotReadableException(
+            final HttpMessageNotReadableException ex, final WebRequest request) {
+
+        String message = "Invalid JSON format or malformed request body";
+        if (ex.getMessage() != null && ex.getMessage().contains("JSON")) {
+            message = "Invalid JSON structure in request body";
+        }
+
+        ApiErrorResponse errorResponse =
+                responseMapper.toErrorResponse(
+                        "Bad Request",
+                        message,
+                        HttpStatus.BAD_REQUEST,
+                        request.getDescription(false));
+
+        return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
+    }
+
+    /**
+     * Handle unsupported media type exception.
+     *
+     * @param ex the exception
+     * @param request the web request
+     * @return API error response
+     */
+    @ExceptionHandler(HttpMediaTypeNotSupportedException.class)
+    public ResponseEntity<ApiErrorResponse> handleHttpMediaTypeNotSupportedException(
+            final HttpMediaTypeNotSupportedException ex, final WebRequest request) {
+
+        String supportedTypes =
+                ex.getSupportedMediaTypes().stream()
+                        .map(MimeType::toString)
+                        .reduce((a, b) -> a + ", " + b)
+                        .orElse("none");
+
+        String message =
+                String.format(
+                        "Content type '%s' not supported. Supported types are: %s",
+                        ex.getContentType(), supportedTypes);
+
+        ApiErrorResponse errorResponse =
+                responseMapper.toErrorResponse(
+                        "Unsupported Media Type",
+                        message,
+                        HttpStatus.UNSUPPORTED_MEDIA_TYPE,
+                        request.getDescription(false));
+
+        return new ResponseEntity<>(errorResponse, HttpStatus.UNSUPPORTED_MEDIA_TYPE);
+    }
+
+    /**
      * Handle resource not found exceptions.
      *
      * @param ex the exception
      * @param request the web request
      * @return API error response
      */
-    @ExceptionHandler(ResourceNotFoundException.class)
+    @ExceptionHandler({ResourceNotFoundException.class, NoResourceFoundException.class})
     public ResponseEntity<ApiErrorResponse> handleResourceNotFoundException(
             final ResourceNotFoundException ex, final WebRequest request) {
 
         ApiErrorResponse errorResponse =
                 responseMapper.toErrorResponse(
                         "Not Found",
-                        ex.getMessage(),
+                        "Resource not found",
                         HttpStatus.NOT_FOUND,
                         request.getDescription(false));
 
@@ -153,7 +215,7 @@ public final class GlobalExceptionHandler {
         ApiErrorResponse errorResponse =
                 responseMapper.toErrorResponse(
                         "Internal Server Error",
-                        "An unexpected error occurred",
+                        "An unexpected error occurred: " + ex.getMessage(),
                         HttpStatus.INTERNAL_SERVER_ERROR,
                         request.getDescription(false));
 
@@ -239,7 +301,7 @@ public final class GlobalExceptionHandler {
         ApiErrorResponse errorResponse =
                 responseMapper.toErrorResponse(
                         "Access Denied",
-                        "You don't have permission to access this resource",
+                        "You don't have permission to access this resource: " + ex.getMessage(),
                         HttpStatus.FORBIDDEN,
                         request.getDescription(false));
 

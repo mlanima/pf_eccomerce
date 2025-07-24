@@ -46,7 +46,7 @@ public class CartController {
      * @param request the add to cart request
      * @return the updated cart
      */
-    @PostMapping
+    @PostMapping("/items")
     @PreAuthorize("isAuthenticated()")
     public ResponseEntity<CartResponse> addToCart(@Valid @RequestBody AddToCartRequest request) {
         CartResponse cart = cartService.addToCart(request);

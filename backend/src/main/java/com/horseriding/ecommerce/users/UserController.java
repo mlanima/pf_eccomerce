@@ -104,21 +104,6 @@ public class UserController {
     }
 
     /**
-     * Updates an admin user's role (superadmin only).
-     *
-     * @param adminUserId the ID of the admin user to update
-     * @param role the new role for the admin user
-     * @return the updated admin user
-     */
-    @PutMapping("/admin/users/{adminUserId}/role")
-    @PreAuthorize("hasRole('SUPERADMIN')")
-    public ResponseEntity<UserResponse> updateAdminUserRole(
-            @PathVariable Long adminUserId, @RequestParam UserRole role) {
-        UserResponse user = userService.updateAdminUserRole(adminUserId, role);
-        return ResponseEntity.ok(user);
-    }
-
-    /**
      * Searches for users with pagination (admin only).
      *
      * @param searchTerm the search term
@@ -129,7 +114,7 @@ public class UserController {
      * @return page of users matching the search criteria
      */
     @GetMapping("/admin/users/search")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('SUPERADMIN')")
     public ResponseEntity<PaginationResponse<UserResponse>> searchUsers(
             @RequestParam(required = false, defaultValue = "") String searchTerm,
             @RequestParam(defaultValue = "0") int page,

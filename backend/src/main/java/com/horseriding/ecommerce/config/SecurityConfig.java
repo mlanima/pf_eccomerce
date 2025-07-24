@@ -90,6 +90,8 @@ public class SecurityConfig {
                                         .hasRole("ADMIN")
                                         .requestMatchers(HttpMethod.DELETE, "/api/products/**")
                                         .hasRole("ADMIN")
+                                        .requestMatchers(HttpMethod.PATCH, "/api/products/**")
+                                        .hasRole("ADMIN")
                                         .requestMatchers(HttpMethod.POST, "/api/categories/**")
                                         .hasRole("ADMIN")
                                         .requestMatchers(HttpMethod.PUT, "/api/categories/**")

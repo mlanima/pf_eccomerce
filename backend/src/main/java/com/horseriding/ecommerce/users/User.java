@@ -86,6 +86,7 @@ public final class User implements UserDetails {
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     @NotNull(message = "User role is required")
+    @Builder.Default
     private UserRole role = UserRole.CUSTOMER;
 
     /** Timestamp when the user was created. */

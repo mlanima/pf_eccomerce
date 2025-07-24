@@ -51,9 +51,11 @@ public class Category {
     private Category parent;
 
     @OneToMany(mappedBy = "parent", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @Builder.Default
     private List<Category> subcategories = new ArrayList<>();
 
     @Column(name = "display_order")
+    @Builder.Default
     private Integer displayOrder = 0;
 
     // Audit fields

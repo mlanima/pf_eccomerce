@@ -34,9 +34,11 @@ public class ProductCreateRequest {
     private BigDecimal price;
 
     @Min(value = 0, message = "Stock quantity cannot be negative")
+    @Builder.Default
     private Integer stockQuantity = 0;
 
     @Min(value = 0, message = "Low stock threshold cannot be negative")
+    @Builder.Default
     private Integer lowStockThreshold = 10;
 
     @NotNull(message = "Category ID is required")
@@ -46,7 +48,7 @@ public class ProductCreateRequest {
 
     private Map<String, String> specifications;
 
-    private boolean featured = false;
+    @Builder.Default private boolean featured = false;
 
     @DecimalMin(value = "0.0", message = "Weight cannot be negative")
     private BigDecimal weightKg;

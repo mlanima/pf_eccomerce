@@ -1,5 +1,8 @@
 package com.horseriding.ecommerce.categories;
 
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.horseriding.ecommerce.categories.dtos.requests.CategoryCreateRequest;
 import com.horseriding.ecommerce.categories.dtos.requests.CategoryUpdateRequest;
@@ -8,6 +11,7 @@ import com.horseriding.ecommerce.products.ProductRepository;
 import com.horseriding.ecommerce.users.User;
 import com.horseriding.ecommerce.users.UserRepository;
 import com.horseriding.ecommerce.users.UserRole;
+import java.math.BigDecimal;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -19,38 +23,27 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.math.BigDecimal;
-
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
-
 /**
  * Integration tests for CategoryController.
  * Tests the complete request-response cycle for category management endpoints.
  */
 @SpringBootTest
 @AutoConfigureMockMvc
-@Transactional  // Auto-rollback after each test
+@Transactional // Auto-rollback after each test
 @ActiveProfiles("test")
 class CategoryControllerIntegrationTest {
 
-    @Autowired
-    private MockMvc mockMvc;
+    @Autowired private MockMvc mockMvc;
 
-    @Autowired
-    private ObjectMapper objectMapper;
+    @Autowired private ObjectMapper objectMapper;
 
-    @Autowired
-    private CategoryRepository categoryRepository;
+    @Autowired private CategoryRepository categoryRepository;
 
-    @Autowired
-    private ProductRepository productRepository;
+    @Autowired private ProductRepository productRepository;
 
-    @Autowired
-    private UserRepository userRepository;
+    @Autowired private UserRepository userRepository;
 
-    @Autowired
-    private PasswordEncoder passwordEncoder;
+    @Autowired private PasswordEncoder passwordEncoder;
 
     // Helper methods for test data creation
     private Category createTestCategory(String name, String description) {
@@ -93,9 +86,12 @@ class CategoryControllerIntegrationTest {
     @Test
     void shouldGetAllCategoriesWithHierarchicalStructure() throws Exception {
         // Create test categories with hierarchy
-        Category rootCategory = createTestCategory("Riding Equipment", "Main riding equipment category");
-        Category subcategory1 = createTestSubcategory("Saddles", "Various types of saddles", rootCategory);
-        Category subcategory2 = createTestSubcategory("Bridles", "Various types of bridles", rootCategory);
+        Category rootCategory =
+                createTestCategory("Riding Equipment", "Main riding equipment category");
+        Category subcategory1 =
+                createTestSubcategory("Saddles", "Various types of saddles", rootCategory);
+        Category subcategory2 =
+                createTestSubcategory("Bridles", "Various types of bridles", rootCategory);
 
         mockMvc.perform(get("/api/categories"))
                 .andExpect(status().isOk())
@@ -108,7 +104,8 @@ class CategoryControllerIntegrationTest {
     void shouldGetCategoryTreeWithHierarchicalStructure() throws Exception {
         // Create test categories with hierarchy
         Category rootCategory = createTestCategory("Horse Care", "Horse care products");
-        Category subcategory1 = createTestSubcategory("Grooming", "Grooming supplies", rootCategory);
+        Category subcategory1 =
+                createTestSubcategory("Grooming", "Grooming supplies", rootCategory);
         Category subcategory2 = createTestSubcategory("Health", "Health products", rootCategory);
 
         mockMvc.perform(get("/api/categories/tree"))
@@ -131,7 +128,7 @@ class CategoryControllerIntegrationTest {
                 .andExpect(jsonPath("$.name").value("Apparel"))
                 .andExpect(jsonPath("$.description").value("Riding apparel"))
                 .andExpect(jsonPath("$.subcategories").isArray());
-        
+
         // Verify subcategories exist by checking the subcategories endpoint
         mockMvc.perform(get("/api/categories/{parentId}/subcategories", parentCategory.getId()))
                 .andExpect(status().isOk())
@@ -141,16 +138,18 @@ class CategoryControllerIntegrationTest {
 
     @Test
     void shouldReturnNotFoundForNonExistentCategory() throws Exception {
-        mockMvc.perform(get("/api/categories/999999"))
-                .andExpect(status().isNotFound());
+        mockMvc.perform(get("/api/categories/999999")).andExpect(status().isNotFound());
     }
 
     @Test
     void shouldGetSubcategoriesOfParentCategory() throws Exception {
         // Create parent category with subcategories
-        Category parentCategory = createTestCategory("Training Equipment", "Equipment for training");
-        Category subcategory1 = createTestSubcategory("Lunging", "Lunging equipment", parentCategory);
-        Category subcategory2 = createTestSubcategory("Ground Work", "Ground work tools", parentCategory);
+        Category parentCategory =
+                createTestCategory("Training Equipment", "Equipment for training");
+        Category subcategory1 =
+                createTestSubcategory("Lunging", "Lunging equipment", parentCategory);
+        Category subcategory2 =
+                createTestSubcategory("Ground Work", "Ground work tools", parentCategory);
 
         mockMvc.perform(get("/api/categories/{parentId}/subcategories", parentCategory.getId()))
                 .andExpect(status().isOk())
@@ -164,7 +163,8 @@ class CategoryControllerIntegrationTest {
     void shouldGetRootCategories() throws Exception {
         // Create root categories and subcategories
         Category rootCategory1 = createTestCategory("Stable Equipment", "Equipment for stables");
-        Category rootCategory2 = createTestCategory("Feed & Supplements", "Horse feed and supplements");
+        Category rootCategory2 =
+                createTestCategory("Feed & Supplements", "Horse feed and supplements");
         Category subcategory = createTestSubcategory("Hay", "Various types of hay", rootCategory2);
 
         mockMvc.perform(get("/api/categories/root"))
@@ -172,7 +172,8 @@ class CategoryControllerIntegrationTest {
                 .andExpect(jsonPath("$").isArray())
                 .andExpect(jsonPath("$[?(@.name == 'Stable Equipment')]").exists())
                 .andExpect(jsonPath("$[?(@.name == 'Feed & Supplements')]").exists())
-                .andExpect(jsonPath("$.length()").value(2)); // Only root categories, not subcategories
+                .andExpect(
+                        jsonPath("$.length()").value(2)); // Only root categories, not subcategories
     }
 
     @Test
@@ -182,8 +183,7 @@ class CategoryControllerIntegrationTest {
         createTestCategory("Saddle Bags", "Storage bags for saddles");
         createTestCategory("Bridle Accessories", "Accessories for bridles");
 
-        mockMvc.perform(get("/api/categories/search")
-                .param("searchTerm", "saddle"))
+        mockMvc.perform(get("/api/categories/search").param("searchTerm", "saddle"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.content").isArray())
                 .andExpect(jsonPath("$.content[?(@.name == 'Saddle Pads')]").exists())
@@ -200,8 +200,7 @@ class CategoryControllerIntegrationTest {
 
         // Note: This test assumes there's an endpoint to get products by category
         // If this endpoint doesn't exist in ProductController, this test validates the relationship
-        mockMvc.perform(get("/api/products")
-                .param("categoryId", category.getId().toString()))
+        mockMvc.perform(get("/api/products").param("categoryId", category.getId().toString()))
                 .andExpect(status().isOk());
     }
 
@@ -215,9 +214,10 @@ class CategoryControllerIntegrationTest {
         request.setDescription("A new category for testing");
         request.setDisplayOrder(1);
 
-        mockMvc.perform(post("/api/categories")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(request)))
+        mockMvc.perform(
+                        post("/api/categories")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.name").value("New Category"))
                 .andExpect(jsonPath("$.description").value("A new category for testing"))
@@ -232,9 +232,10 @@ class CategoryControllerIntegrationTest {
         request.setName("Unauthorized Category");
         request.setDescription("This should not be created");
 
-        mockMvc.perform(post("/api/categories")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(request)))
+        mockMvc.perform(
+                        post("/api/categories")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isForbidden());
     }
 
@@ -244,9 +245,10 @@ class CategoryControllerIntegrationTest {
         request.setName("Unauthenticated Category");
         request.setDescription("This should not be created");
 
-        mockMvc.perform(post("/api/categories")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(request)))
+        mockMvc.perform(
+                        post("/api/categories")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isUnauthorized());
     }
 
@@ -254,7 +256,8 @@ class CategoryControllerIntegrationTest {
     @WithMockUser(roles = "ADMIN")
     void shouldCreateSubcategoryWithParentChildRelationship() throws Exception {
         // Create parent category first
-        Category parentCategory = createTestCategory("Parent Category", "Parent category for testing");
+        Category parentCategory =
+                createTestCategory("Parent Category", "Parent category for testing");
 
         CategoryCreateRequest subcategoryRequest = new CategoryCreateRequest();
         subcategoryRequest.setName("Subcategory");
@@ -262,9 +265,10 @@ class CategoryControllerIntegrationTest {
         subcategoryRequest.setParentId(parentCategory.getId());
         subcategoryRequest.setDisplayOrder(1);
 
-        mockMvc.perform(post("/api/categories")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(subcategoryRequest)))
+        mockMvc.perform(
+                        post("/api/categories")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(objectMapper.writeValueAsString(subcategoryRequest)))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.name").value("Subcategory"))
                 .andExpect(jsonPath("$.description").value("A subcategory for testing"))
@@ -284,9 +288,10 @@ class CategoryControllerIntegrationTest {
         updateRequest.setDisplayOrder(5);
         updateRequest.setActive(true);
 
-        mockMvc.perform(put("/api/categories/{categoryId}", category.getId())
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(updateRequest)))
+        mockMvc.perform(
+                        put("/api/categories/{categoryId}", category.getId())
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(objectMapper.writeValueAsString(updateRequest)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.name").value("Updated Name"))
                 .andExpect(jsonPath("$.description").value("Updated description"))
@@ -303,9 +308,10 @@ class CategoryControllerIntegrationTest {
         updateRequest.setName("Updated Name");
         updateRequest.setDescription("Updated description");
 
-        mockMvc.perform(put("/api/categories/{categoryId}", category.getId())
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(updateRequest)))
+        mockMvc.perform(
+                        put("/api/categories/{categoryId}", category.getId())
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(objectMapper.writeValueAsString(updateRequest)))
                 .andExpect(status().isForbidden());
     }
 
@@ -348,7 +354,8 @@ class CategoryControllerIntegrationTest {
     void shouldRejectDeletionOfCategoryWithSubcategories() throws Exception {
         // Create parent category with subcategories
         Category parentCategory = createTestCategory("Parent with Children", "Has subcategories");
-        Category subcategory = createTestSubcategory("Child Category", "Child of parent", parentCategory);
+        Category subcategory =
+                createTestSubcategory("Child Category", "Child of parent", parentCategory);
 
         mockMvc.perform(delete("/api/categories/{categoryId}", parentCategory.getId()))
                 .andExpect(status().isBadRequest());
@@ -362,9 +369,10 @@ class CategoryControllerIntegrationTest {
         CategoryCreateRequest request = new CategoryCreateRequest();
         // Missing name field
 
-        mockMvc.perform(post("/api/categories")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(request)))
+        mockMvc.perform(
+                        post("/api/categories")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isBadRequest());
     }
 
@@ -375,9 +383,10 @@ class CategoryControllerIntegrationTest {
         request.setName(""); // Blank name
         request.setDescription("Valid description");
 
-        mockMvc.perform(post("/api/categories")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(request)))
+        mockMvc.perform(
+                        post("/api/categories")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isBadRequest());
     }
 
@@ -391,9 +400,10 @@ class CategoryControllerIntegrationTest {
         request.setName("Duplicate Category"); // Same name
         request.setDescription("Second category with same name");
 
-        mockMvc.perform(post("/api/categories")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(request)))
+        mockMvc.perform(
+                        post("/api/categories")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isBadRequest());
     }
 
@@ -404,9 +414,10 @@ class CategoryControllerIntegrationTest {
         request.setName("A".repeat(101)); // Exceeds 100 character limit
         request.setDescription("Valid description");
 
-        mockMvc.perform(post("/api/categories")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(request)))
+        mockMvc.perform(
+                        post("/api/categories")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isBadRequest());
     }
 
@@ -417,9 +428,10 @@ class CategoryControllerIntegrationTest {
         request.setName("Valid Name");
         request.setDescription("A".repeat(501)); // Exceeds 500 character limit
 
-        mockMvc.perform(post("/api/categories")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(request)))
+        mockMvc.perform(
+                        post("/api/categories")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isBadRequest());
     }
 
@@ -431,9 +443,10 @@ class CategoryControllerIntegrationTest {
         request.setDescription("Valid description");
         request.setParentId(999999L); // Non-existent parent ID
 
-        mockMvc.perform(post("/api/categories")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(request)))
+        mockMvc.perform(
+                        post("/api/categories")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isNotFound());
     }
 
@@ -446,9 +459,10 @@ class CategoryControllerIntegrationTest {
         CategoryUpdateRequest updateRequest = new CategoryUpdateRequest();
         // Missing name field
 
-        mockMvc.perform(put("/api/categories/{categoryId}", category.getId())
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(updateRequest)))
+        mockMvc.perform(
+                        put("/api/categories/{categoryId}", category.getId())
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(objectMapper.writeValueAsString(updateRequest)))
                 .andExpect(status().isBadRequest());
     }
 
@@ -462,9 +476,10 @@ class CategoryControllerIntegrationTest {
         updateRequest.setName(""); // Blank name
         updateRequest.setDescription("Valid description");
 
-        mockMvc.perform(put("/api/categories/{categoryId}", category.getId())
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(updateRequest)))
+        mockMvc.perform(
+                        put("/api/categories/{categoryId}", category.getId())
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(objectMapper.writeValueAsString(updateRequest)))
                 .andExpect(status().isBadRequest());
     }
 
@@ -479,9 +494,10 @@ class CategoryControllerIntegrationTest {
         updateRequest.setName("Existing Category"); // Same name as existing category
         updateRequest.setDescription("Updated description");
 
-        mockMvc.perform(put("/api/categories/{categoryId}", categoryToUpdate.getId())
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(updateRequest)))
+        mockMvc.perform(
+                        put("/api/categories/{categoryId}", categoryToUpdate.getId())
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(objectMapper.writeValueAsString(updateRequest)))
                 .andExpect(status().isBadRequest());
     }
 
@@ -495,9 +511,10 @@ class CategoryControllerIntegrationTest {
         updateRequest.setName("A".repeat(101)); // Exceeds 100 character limit
         updateRequest.setDescription("Valid description");
 
-        mockMvc.perform(put("/api/categories/{categoryId}", category.getId())
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(updateRequest)))
+        mockMvc.perform(
+                        put("/api/categories/{categoryId}", category.getId())
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(objectMapper.writeValueAsString(updateRequest)))
                 .andExpect(status().isBadRequest());
     }
 
@@ -511,9 +528,10 @@ class CategoryControllerIntegrationTest {
         updateRequest.setName("Valid Name");
         updateRequest.setDescription("A".repeat(501)); // Exceeds 500 character limit
 
-        mockMvc.perform(put("/api/categories/{categoryId}", category.getId())
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(updateRequest)))
+        mockMvc.perform(
+                        put("/api/categories/{categoryId}", category.getId())
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(objectMapper.writeValueAsString(updateRequest)))
                 .andExpect(status().isBadRequest());
     }
 
@@ -530,9 +548,10 @@ class CategoryControllerIntegrationTest {
         updateRequest.setDescription("Parent");
         updateRequest.setParentId(childCategory.getId()); // Circular reference
 
-        mockMvc.perform(put("/api/categories/{categoryId}", parentCategory.getId())
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(updateRequest)))
+        mockMvc.perform(
+                        put("/api/categories/{categoryId}", parentCategory.getId())
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(objectMapper.writeValueAsString(updateRequest)))
                 .andExpect(status().isBadRequest());
     }
 
@@ -547,9 +566,10 @@ class CategoryControllerIntegrationTest {
         updateRequest.setDescription("Test description");
         updateRequest.setParentId(category.getId()); // Self as parent
 
-        mockMvc.perform(put("/api/categories/{categoryId}", category.getId())
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(updateRequest)))
+        mockMvc.perform(
+                        put("/api/categories/{categoryId}", category.getId())
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(objectMapper.writeValueAsString(updateRequest)))
                 .andExpect(status().isBadRequest());
     }
 
@@ -560,7 +580,8 @@ class CategoryControllerIntegrationTest {
         Category category = createTestCategory("Category with Products", "Has products");
         Product product = createTestProduct("Test Product", category);
 
-        // Try to delete category with products - this should succeed as products can exist without categories
+        // Try to delete category with products - this should succeed as products can exist without
+        // categories
         // or should be handled gracefully depending on business rules
         mockMvc.perform(delete("/api/categories/{categoryId}", category.getId()))
                 .andExpect(status().isOk());

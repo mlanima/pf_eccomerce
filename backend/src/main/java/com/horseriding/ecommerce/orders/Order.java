@@ -47,6 +47,7 @@ public class Order {
     private User user;
 
     @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @Builder.Default
     private List<OrderItem> items = new ArrayList<>();
 
     // Shipping address fields populated by PayPal
@@ -103,15 +104,18 @@ public class Order {
 
     @Column(name = "shipping_amount", precision = 10, scale = 2)
     @DecimalMin(value = "0.00", message = "Shipping amount cannot be negative")
+    @Builder.Default
     private BigDecimal shippingAmount = BigDecimal.ZERO;
 
     @Column(name = "tax_amount", precision = 10, scale = 2)
     @DecimalMin(value = "0.00", message = "Tax amount cannot be negative")
+    @Builder.Default
     private BigDecimal taxAmount = BigDecimal.ZERO;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     @NotNull(message = "Order status is required")
+    @Builder.Default
     private OrderStatus status = OrderStatus.PENDING;
 
     // PayPal integration fields
@@ -129,6 +133,7 @@ public class Order {
 
     @Column(name = "payment_method")
     @Size(max = 50, message = "Payment method must not exceed 50 characters")
+    @Builder.Default
     private String paymentMethod = "PAYPAL";
 
     @Column(name = "tracking_number")

@@ -1,25 +1,31 @@
 package com.horseriding.ecommerce.security;
 
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.horseriding.ecommerce.auth.JwtTokenProvider;
-import com.horseriding.ecommerce.auth.TokenBlacklist;
 import com.horseriding.ecommerce.auth.TokenBlacklistRepository;
+import com.horseriding.ecommerce.auth.TokenService;
 import com.horseriding.ecommerce.users.User;
 import com.horseriding.ecommerce.users.UserRepository;
 import com.horseriding.ecommerce.users.UserRole;
+import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.SignatureAlgorithm;
+import io.jsonwebtoken.security.Keys;
+import java.nio.charset.StandardCharsets;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.transaction.annotation.Transactional;
-
-import java.time.LocalDateTime;
-
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 /**
  * Comprehensive security integration tests.
@@ -30,23 +36,22 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @Transactional
 class SecurityIntegrationTest {
 
-    @Autowired
-    private MockMvc mockMvc;
+    @Autowired private MockMvc mockMvc;
 
-    @Autowired
-    private ObjectMapper objectMapper;
+    @Autowired private ObjectMapper objectMapper;
 
-    @Autowired
-    private UserRepository userRepository;
+    @Autowired private UserRepository userRepository;
 
-    @Autowired
-    private PasswordEncoder passwordEncoder;
+    @Autowired private PasswordEncoder passwordEncoder;
 
-    @Autowired
-    private JwtTokenProvider jwtTokenProvider;
+    @Autowired private JwtTokenProvider jwtTokenProvider;
 
-    @Autowired
-    private TokenBlacklistRepository tokenBlacklistRepository;
+    @Autowired private TokenService tokenService;
+
+    @Autowired private TokenBlacklistRepository tokenBlacklistRepository;
+
+    @Value("${jwt.secret:defaultSecretKeyForDevelopmentEnvironmentOnly}")
+    private String secret;
 
     // Helper methods for test data creation
     private User createTestUser(String email, UserRole role) {
@@ -63,10 +68,27 @@ class SecurityIntegrationTest {
         return jwtTokenProvider.generateAccessToken(user);
     }
 
-    private String generateExpiredToken(User user) {
-        // For testing expired tokens, we'll create a valid token and test with a very old timestamp
-        // In a real scenario, you might need to create a custom method or mock the token provider
-        return jwtTokenProvider.generateAccessToken(user); // This will be used in a different test context
+    public String generateExpiredAccessToken(User user) {
+        long expiredDuration = -3600_000L; // 1 hour in the past
+
+        Map<String, Object> claims = new HashMap<>();
+        claims.put("role", user.getRole().name());
+        claims.put("userId", user.getId());
+        claims.put("name", user.getFullName());
+        claims.put("token_type", "access");
+
+        Date now = new Date(System.currentTimeMillis());
+        Date expiryDate = new Date(now.getTime() + expiredDuration);
+
+        return Jwts.builder()
+                .setClaims(claims)
+                .setSubject(user.getEmail())
+                .setIssuedAt(now)
+                .setExpiration(expiryDate)
+                .signWith(
+                        Keys.hmacShaKeyFor(secret.getBytes(StandardCharsets.UTF_8)),
+                        SignatureAlgorithm.HS256)
+                .compact();
     }
 
     // Task 8.1: JWT authentication validation tests
@@ -77,8 +99,7 @@ class SecurityIntegrationTest {
         User user = createTestUser("test@example.com", UserRole.CUSTOMER);
         String validToken = generateValidToken(user);
 
-        mockMvc.perform(get("/api/users/profile")
-                .header("Authorization", "Bearer " + validToken))
+        mockMvc.perform(get("/api/users/profile").header("Authorization", "Bearer " + validToken))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.email").value("test@example.com"));
     }
@@ -87,10 +108,9 @@ class SecurityIntegrationTest {
     void shouldRejectAccessWithExpiredJwtToken() throws Exception {
         // Create test user
         User user = createTestUser("test@example.com", UserRole.CUSTOMER);
-        String expiredToken = generateExpiredToken(user);
+        String expiredToken = generateExpiredAccessToken(user);
 
-        mockMvc.perform(get("/api/users/profile")
-                .header("Authorization", "Bearer " + expiredToken))
+        mockMvc.perform(get("/api/users/profile").header("Authorization", "Bearer " + expiredToken))
                 .andExpect(status().isUnauthorized());
     }
 
@@ -98,8 +118,7 @@ class SecurityIntegrationTest {
     void shouldRejectAccessWithInvalidJwtToken() throws Exception {
         String invalidToken = "invalid.jwt.token";
 
-        mockMvc.perform(get("/api/users/profile")
-                .header("Authorization", "Bearer " + invalidToken))
+        mockMvc.perform(get("/api/users/profile").header("Authorization", "Bearer " + invalidToken))
                 .andExpect(status().isUnauthorized());
     }
 
@@ -107,31 +126,27 @@ class SecurityIntegrationTest {
     void shouldRejectAccessWithMalformedJwtToken() throws Exception {
         String malformedToken = "malformed-token-without-proper-structure";
 
-        mockMvc.perform(get("/api/users/profile")
-                .header("Authorization", "Bearer " + malformedToken))
+        mockMvc.perform(
+                        get("/api/users/profile")
+                                .header("Authorization", "Bearer " + malformedToken))
                 .andExpect(status().isUnauthorized());
     }
 
     @Test
     void shouldRejectAccessWithoutAuthorizationHeader() throws Exception {
-        mockMvc.perform(get("/api/users/profile"))
-                .andExpect(status().isUnauthorized());
+        mockMvc.perform(get("/api/users/profile")).andExpect(status().isUnauthorized());
     }
 
     @Test
     void shouldRejectAccessWithBlacklistedToken() throws Exception {
         // Create test user
         User user = createTestUser("test@example.com", UserRole.CUSTOMER);
-        String validToken = generateValidToken(user);
+        String token = generateValidToken(user);
 
         // Blacklist the token (using hash as per the entity structure)
-        TokenBlacklist blacklistedToken = new TokenBlacklist();
-        blacklistedToken.setTokenHash(Integer.toString(validToken.hashCode()));
-        blacklistedToken.setExpiresAt(LocalDateTime.now().plusHours(1));
-        tokenBlacklistRepository.save(blacklistedToken);
+        tokenService.blacklistToken(token);
 
-        mockMvc.perform(get("/api/users/profile")
-                .header("Authorization", "Bearer " + validToken))
+        mockMvc.perform(get("/api/users/profile").header("Authorization", "Bearer " + token))
                 .andExpect(status().isUnauthorized());
     }
 
@@ -142,8 +157,7 @@ class SecurityIntegrationTest {
         String validToken = generateValidToken(user);
 
         // Send token without "Bearer " prefix
-        mockMvc.perform(get("/api/users/profile")
-                .header("Authorization", validToken))
+        mockMvc.perform(get("/api/users/profile").header("Authorization", validToken))
                 .andExpect(status().isUnauthorized());
     }
 
@@ -155,8 +169,7 @@ class SecurityIntegrationTest {
         User customer = createTestUser("customer@example.com", UserRole.CUSTOMER);
         String customerToken = generateValidToken(customer);
 
-        mockMvc.perform(get("/api/admin/users")
-                .header("Authorization", "Bearer " + customerToken))
+        mockMvc.perform(get("/api/admin/users").header("Authorization", "Bearer " + customerToken))
                 .andExpect(status().isForbidden());
     }
 
@@ -166,10 +179,11 @@ class SecurityIntegrationTest {
         User admin = createTestUser("admin@example.com", UserRole.ADMIN);
         String adminToken = generateValidToken(admin);
 
-        mockMvc.perform(post("/api/admin/users")
-                .header("Authorization", "Bearer " + adminToken)
-                .contentType(MediaType.APPLICATION_JSON)
-                .content("{}"))
+        mockMvc.perform(
+                        post("/api/admin/users")
+                                .header("Authorization", "Bearer " + adminToken)
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content("{}"))
                 .andExpect(status().isForbidden());
     }
 
@@ -179,8 +193,9 @@ class SecurityIntegrationTest {
         User customer = createTestUser("customer@example.com", UserRole.CUSTOMER);
         String customerToken = generateValidToken(customer);
 
-        mockMvc.perform(get("/api/users/profile")
-                .header("Authorization", "Bearer " + customerToken))
+        mockMvc.perform(
+                        get("/api/users/profile")
+                                .header("Authorization", "Bearer " + customerToken))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.role").value("CUSTOMER"));
     }
@@ -188,11 +203,12 @@ class SecurityIntegrationTest {
     @Test
     void shouldAllowAdminEndpointAccessWithValidAdminRole() throws Exception {
         // Create admin user
-        User admin = createTestUser("admin@example.com", UserRole.ADMIN);
+        User admin = createTestUser("admin@example.com", UserRole.SUPERADMIN);
         String adminToken = generateValidToken(admin);
 
-        mockMvc.perform(get("/api/admin/users/search")
-                .header("Authorization", "Bearer " + adminToken))
+        mockMvc.perform(
+                        get("/api/admin/users/search")
+                                .header("Authorization", "Bearer " + adminToken))
                 .andExpect(status().isOk());
     }
 
@@ -202,8 +218,9 @@ class SecurityIntegrationTest {
         User superadmin = createTestUser("superadmin@example.com", UserRole.SUPERADMIN);
         String superadminToken = generateValidToken(superadmin);
 
-        mockMvc.perform(get("/api/admin/users")
-                .header("Authorization", "Bearer " + superadminToken))
+        mockMvc.perform(
+                        get("/api/admin/users")
+                                .header("Authorization", "Bearer " + superadminToken))
                 .andExpect(status().isOk());
     }
 
@@ -213,7 +230,8 @@ class SecurityIntegrationTest {
         User customer = createTestUser("customer@example.com", UserRole.CUSTOMER);
         String customerToken = generateValidToken(customer);
 
-        String productJson = """
+        String productJson =
+                """
             {
                 "name": "Test Product",
                 "description": "Test Description",
@@ -223,10 +241,11 @@ class SecurityIntegrationTest {
             }
             """;
 
-        mockMvc.perform(post("/api/products")
-                .header("Authorization", "Bearer " + customerToken)
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(productJson))
+        mockMvc.perform(
+                        post("/api/products")
+                                .header("Authorization", "Bearer " + customerToken)
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(productJson))
                 .andExpect(status().isForbidden());
     }
 
@@ -238,21 +257,26 @@ class SecurityIntegrationTest {
 
         // This test assumes the endpoint exists and would normally succeed
         // The actual result depends on the product creation logic
-        mockMvc.perform(post("/api/products")
-                .header("Authorization", "Bearer " + adminToken)
-                .contentType(MediaType.APPLICATION_JSON)
-                .content("{}"))
-                .andExpect(status().is4xxClientError()); // Should be a client error but not forbidden
+        mockMvc.perform(
+                        post("/api/products")
+                                .header("Authorization", "Bearer " + adminToken)
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content("{}"))
+                .andExpect(
+                        status().is4xxClientError()); // Should be a client error but not forbidden
     }
 
     // Task 8.3: CORS and security headers tests
 
     @Test
     void shouldHandleCorsPreflightRequest() throws Exception {
-        mockMvc.perform(options("/api/products")
-                .header("Origin", "http://localhost:3000")
-                .header("Access-Control-Request-Method", "POST")
-                .header("Access-Control-Request-Headers", "Content-Type,Authorization"))
+        mockMvc.perform(
+                        options("/api/products")
+                                .header("Origin", "http://localhost:3000")
+                                .header("Access-Control-Request-Method", "POST")
+                                .header(
+                                        "Access-Control-Request-Headers",
+                                        "Content-Type,Authorization"))
                 .andExpect(status().isOk())
                 .andExpect(header().exists("Access-Control-Allow-Origin"))
                 .andExpect(header().exists("Access-Control-Allow-Methods"))
@@ -261,8 +285,7 @@ class SecurityIntegrationTest {
 
     @Test
     void shouldHandleCorsActualRequestWithProperHeaders() throws Exception {
-        mockMvc.perform(get("/api/products")
-                .header("Origin", "http://localhost:3000"))
+        mockMvc.perform(get("/api/products").header("Origin", "http://localhost:3000"))
                 .andExpect(status().isOk())
                 .andExpect(header().exists("Access-Control-Allow-Origin"));
     }
@@ -280,9 +303,8 @@ class SecurityIntegrationTest {
     void shouldRejectRequestWithInvalidOrigin() throws Exception {
         // This test depends on CORS configuration
         // If CORS is configured to reject certain origins, this should fail
-        mockMvc.perform(get("/api/products")
-                .header("Origin", "http://malicious-site.com"))
-                .andExpect(status().isOk()); // This might vary based on CORS config
+        mockMvc.perform(get("/api/products").header("Origin", "http://malicious-site.com"))
+                .andExpect(status().isForbidden()); // This might vary based on CORS config
     }
 
     // Additional security tests
@@ -292,12 +314,13 @@ class SecurityIntegrationTest {
         // Create test user
         User user = createTestUser("test@example.com", UserRole.CUSTOMER);
         String validToken = generateValidToken(user);
-        
+
         // Tamper with the token by changing a character
         String tamperedToken = validToken.substring(0, validToken.length() - 5) + "XXXXX";
 
-        mockMvc.perform(get("/api/users/profile")
-                .header("Authorization", "Bearer " + tamperedToken))
+        mockMvc.perform(
+                        get("/api/users/profile")
+                                .header("Authorization", "Bearer " + tamperedToken))
                 .andExpect(status().isUnauthorized());
     }
 
@@ -311,8 +334,9 @@ class SecurityIntegrationTest {
         nonExistentUser.setLastName("Existent");
         String tokenForNonExistentUser = jwtTokenProvider.generateAccessToken(nonExistentUser);
 
-        mockMvc.perform(get("/api/users/profile")
-                .header("Authorization", "Bearer " + tokenForNonExistentUser))
+        mockMvc.perform(
+                        get("/api/users/profile")
+                                .header("Authorization", "Bearer " + tokenForNonExistentUser))
                 .andExpect(status().isUnauthorized());
     }
 
@@ -324,23 +348,22 @@ class SecurityIntegrationTest {
 
         // Make multiple requests with the same token
         for (int i = 0; i < 3; i++) {
-            mockMvc.perform(get("/api/users/profile")
-                    .header("Authorization", "Bearer " + validToken))
+            mockMvc.perform(
+                            get("/api/users/profile")
+                                    .header("Authorization", "Bearer " + validToken))
                     .andExpect(status().isOk());
         }
     }
 
     @Test
     void shouldRejectRequestWithEmptyAuthorizationHeader() throws Exception {
-        mockMvc.perform(get("/api/users/profile")
-                .header("Authorization", ""))
+        mockMvc.perform(get("/api/users/profile").header("Authorization", ""))
                 .andExpect(status().isUnauthorized());
     }
 
     @Test
     void shouldRejectRequestWithOnlyBearerPrefix() throws Exception {
-        mockMvc.perform(get("/api/users/profile")
-                .header("Authorization", "Bearer "))
+        mockMvc.perform(get("/api/users/profile").header("Authorization", "Bearer "))
                 .andExpect(status().isUnauthorized());
     }
 }

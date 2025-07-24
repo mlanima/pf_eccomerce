@@ -118,11 +118,13 @@ public class Product {
     /** Current stock quantity. */
     @Column(name = "stock_quantity", nullable = false)
     @Min(value = 0, message = "Stock quantity cannot be negative")
+    @Builder.Default
     private Integer stockQuantity = 0;
 
     /** Threshold for low stock alerts. */
     @Column(name = "low_stock_threshold")
     @Min(value = 0, message = "Low stock threshold cannot be negative")
+    @Builder.Default
     private Integer lowStockThreshold = DEFAULT_LOW_STOCK_THRESHOLD;
 
     /** Product category. */
@@ -135,6 +137,7 @@ public class Product {
     @ElementCollection(fetch = FetchType.LAZY)
     @CollectionTable(name = "product_images", joinColumns = @JoinColumn(name = "product_id"))
     @Column(name = "image_url")
+    @Builder.Default
     private List<String> imageUrls = new ArrayList<>();
 
     /** Product specifications. */
@@ -144,10 +147,12 @@ public class Product {
             joinColumns = @JoinColumn(name = "product_id"))
     @MapKeyColumn(name = "spec_name")
     @Column(name = "spec_value")
+    @Builder.Default
     private Map<String, String> specifications = new HashMap<>();
 
     /** Whether the product is featured. */
     @Column(name = "featured")
+    @Builder.Default
     private boolean featured = false;
 
     /** Product weight in kilograms. */
