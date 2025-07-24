@@ -1,0 +1,59 @@
+spring:
+  datasource:
+    url: jdbc:h2:mem:testdb;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE
+    username: sa
+    password:
+    driver-class-name: org.h2.Driver
+
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+    show-sql: false
+    properties:
+      hibernate:
+        format_sql: true
+        dialect: org.hibernate.dialect.H2Dialect
+
+  h2:
+    console:
+      enabled: true
+
+  sql:
+    init:
+      mode: never # Disable data.sql execution for tests
+
+# JWT Configuration for tests
+jwt:
+  secret: test-secret-key-for-integration-tests-only-must-be-at-least-256-bits
+  access-token:
+    expiration: 3600000 # 1 hour
+  refresh-token:
+    expiration: 86400000 # 24 hours
+
+# PayPal Configuration for tests
+paypal:
+  client-id: test-client-id
+  client-secret: test-client-secret
+  mode: sandbox
+
+# File Upload Configuration for tests
+file:
+  upload-dir: ./test-uploads
+  max-size: 10MB
+
+# CORS Configuration for tests
+cors:
+  allowed-origins: http://localhost:3000
+
+logging:
+  level:
+    com.horseriding.ecommerce: DEBUG
+    org.springframework.security: WARN
+    org.springframework.web: WARN
+    org.hibernate.SQL: DEBUG
+    org.hibernate.type.descriptor.sql.BasicBinder: TRACE
+
+# Test-specific configurations
+test:
+  data:
+    cleanup: true

@@ -37,7 +37,6 @@ backend/.project
 backend/src/main/resources/application-local.yml
 backend/src/main/resources/application-dev.yml
 backend/src/main/resources/application-prod.yml
-backend/src/main/resources/application-test.yml
 backend/logs/
 backend/.factorypath
 backend/HELP.md
@@ -90,7 +89,6 @@ yarn-error.log*
 # Testing
 /coverage/
 /.nyc_output
-/backend/src/test/resources/application-test.yml
 
 # Production build files
 /dist/
